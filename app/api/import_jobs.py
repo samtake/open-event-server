@@ -9,14 +9,17 @@ from app.models.import_job import ImportJob
 
 class ImportJobList(ResourceList):
     """
-    List ImportJob
+    列出导入作业
     """
 
     def query(self, kwargs):
+        """查询方法"""
         query_ = self.session.query(ImportJob)
+        # 过滤当前用户的导入作业
         query_ = query_.filter_by(user_id=current_user.id)
         return query_
 
+    # 需要JWT认证
     decorators = (jwt_required,)
     schema = ImportJobSchema
     data_layer = {
@@ -30,9 +33,10 @@ class ImportJobList(ResourceList):
 
 class ImportJobDetail(ResourceDetail):
     """
-    ImportJob Detail by id
+    根据ID获取导入作业详情
     """
 
+    # 需要JWT认证
     decorators = (jwt_required,)
     schema = ImportJobSchema
     data_layer = {'session': db.session, 'model': ImportJob}

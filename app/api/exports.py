@@ -15,8 +15,10 @@ from app.api.helpers.export_helpers import create_export_job, export_event_json
 from app.api.helpers.permissions import is_admin, is_coorganizer, to_event_id
 from app.api.helpers.utilities import TASK_RESULTS
 
+# 导出相关路由蓝图
 export_routes = Blueprint('exports', __name__, url_prefix='/v1')
 
+# 导出设置默认配置
 EXPORT_SETTING = {'image': False, 'video': False, 'document': False, 'audio': False}
 
 
@@ -28,20 +30,22 @@ EXPORT_SETTING = {'image': False, 'video': False, 'document': False, 'audio': Fa
 @to_event_id
 @is_coorganizer
 def export_event(event_id):
+    """导出事件为JSON格式"""
     from .helpers.tasks import export_event_task
 
+    # 设置导出配置
     settings = EXPORT_SETTING
     settings['image'] = request.json.get('image', False)
     settings['video'] = request.json.get('video', False)
     settings['document'] = request.json.get('document', False)
     settings['audio'] = request.json.get('audio', False)
 
-    # queue task
+    # 队列任务
     task = export_event_task.delay(current_user.email, event_id, settings)
-    # create Job
+    # 创建作业
     create_export_job(task.id, event_id)
 
-    # in case of testing
+    # 测试情况下
     if current_app.config.get('CELERY_ALWAYS_EAGER'):
         # send_export_mail(event_id, task.get())
         TASK_RESULTS[task.id] = {'result': task.get(), 'state': task.state}

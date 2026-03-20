@@ -14,20 +14,23 @@ from app.models.sponsor import Sponsor
 
 class SponsorListPost(ResourceList):
     """
-    List and create Sponsors
+    赞助商列表和创建类
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, 'Co-organizer access is required.')
+            raise ForbiddenError({'source': ''}, '需要共同组织者权限。')
+        # 检查事件是否启用了赞助商功能
         if (
             get_count(
                 db.session.query(Event).filter_by(
@@ -36,8 +39,9 @@ class SponsorListPost(ResourceList):
             )
             > 0
         ):
-            raise ForbiddenError({'pointer': ''}, "Sponsors are disabled for this Event")
+            raise ForbiddenError({'pointer': ''}, "此事件已禁用赞助商功能")
 
+    # 允许的方法
     methods = ['POST']
     schema = SponsorSchema
     data_layer = {'session': db.session, 'model': Sponsor}
@@ -45,7 +49,7 @@ class SponsorListPost(ResourceList):
 
 class SponsorList(ResourceList):
     """
-    List Sponsors
+    赞助商列表类
     """
 
     def query(self, view_kwargs):

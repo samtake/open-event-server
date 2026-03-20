@@ -16,20 +16,24 @@ from app.models.users_groups_role import UsersGroupsRoles
 
 class UsersGroupsRolesList(ResourceList):
     """
-    List and create users_groups_roles
+    列出和创建用户组角色
     """
 
     def query(self, view_kwargs):
+        """查询方法"""
         query_ = UsersGroupsRoles.query
+        # 如果提供了组ID，则过滤该组的角色
         if view_kwargs.get('group_id'):
             group = safe_query_kwargs(Group, view_kwargs, 'group_id')
             query_ = query_.filter_by(group_id=group.id)
         return query_
 
     view_kwargs = True
+    # 权限装饰器，只有共同组织者才能访问
     decorators = (
         api.has_permission('is_coorganizer', fetch='group_id', model=UsersGroupsRoles),
     )
+    # 允许的方法
     methods = ['GET']
     schema = UsersGroupsRolesSchema
     data_layer = {
@@ -41,12 +45,12 @@ class UsersGroupsRolesList(ResourceList):
 
 class UsersGroupsRolesListPost(ResourceList):
     """
-    Create users groups roles
+    创建用户组角色
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before get method to get the resource id for fetching details
+        post方法前的检查方法，用于获取资源ID以获取详情
         :param args:
         :param kwargs:
         :param data:

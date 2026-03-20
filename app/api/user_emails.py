@@ -12,26 +12,28 @@ from app.models.user_email import UserEmail
 
 class UserEmailListAdmin(ResourceList):
     """
-    Admin List for User Emails
+    用户邮箱的管理员列表
     """
 
+    # 允许的方法
     methods = [
         'GET',
     ]
     schema = UserEmailSchema
+    # 权限装饰器，只有管理员才能访问
     decorators = (api.has_permission('is_admin'),)
     data_layer = {'session': db.session, 'model': UserEmail}
 
 
 class UserEmailList(ResourceList):
     """
-    List User Emails for a user
+    列出用户的邮箱
     """
 
     def query(self, view_kwargs):
         """
-        query method for Notifications list
-        :param view_kwargs:
+        通知列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         query_ = self.session.query(UserEmail)

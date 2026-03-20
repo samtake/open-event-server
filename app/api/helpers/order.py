@@ -32,26 +32,38 @@ from app.settings import get_settings
 
 def delete_related_attendees_for_order(order):
     """
-    Delete the associated attendees of an order when it is cancelled/deleted/expired
-    :param order: Order whose attendees have to be deleted.
-    :return:
+    删除订单相关的参会者
+    
+    当订单被取消/删除/过期时，删除关联的参会者。
+    
+    参数:
+        order: 要删除参会者的订单
+        
+    返回:
+        None
     """
     for ticket_holder in order.ticket_holders:
         db.session.delete(ticket_holder)
         try:
             db.session.commit()
         except Exception:
-            logging.exception('DB Exception!')
+            logging.exception('数据库异常！')
             db.session.rollback()
 
 
 def set_expiry_for_order(order, override=False):
     """
-    Expire the order after the time slot(10 minutes) if the order is initializing.
-    Also expires the order if we want to expire an order regardless of the state and time.
-    :param order: Order to be expired.
-    :param override: flag to force expiry.
-    :return:
+    设置订单过期
+    
+    如果订单正在初始化，在时间槽（10分钟）后使订单过期。
+    如果我们想要强制使订单过期，也可以使订单过期，无论状态和时间如何。
+    
+    参数:
+        order: 要过期的订单
+        override: 强制过期的标志
+        
+    返回:
+        Order: 更新后的订单
     """
     order_expiry_time = get_settings()['order_expiry_time']
     if (
@@ -74,9 +86,12 @@ def set_expiry_for_order(order, override=False):
 
 def create_pdf_tickets_for_holder(order):
     """
-    Create tickets and invoices for the holders of an order.
-    :param order: The order for which to create tickets for.
+    为订单持有者创建票券和发票
+    
+    参数:
+        order: 要为其创建票券的订单
     """
+    # 转换时间为用户时区
     starts_at = convert_to_user_locale(
         order.user.email, date_time=order.event.starts_at, tz=order.event.timezone
     )
@@ -85,6 +100,7 @@ def create_pdf_tickets_for_holder(order):
     )
     admin_info = Setting.query.first()
     if order.status == 'completed' or order.status == 'placed':
+        # 创建PDF票券
         pdf = create_save_pdf(
             render_template(
                 'pdf/ticket_purchaser.html',

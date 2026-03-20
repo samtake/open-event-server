@@ -32,20 +32,21 @@ from app.models.speaker import Speaker
 from app.models.track import Track
 from app.models.user import User
 
+# 会话蓝图
 sessions_blueprint = Blueprint('sessions_blueprint', __name__, url_prefix='/v1/sessions')
 
 
 class SessionListPost(ResourceList):
     """
-    List Sessions
+    会话列表类
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
         require_relationship(['event'], data)

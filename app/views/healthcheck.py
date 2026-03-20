@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+健康检查模块 - Open Event Server 系统健康状态监控
+
+此模块提供系统组件的健康检查功能，包括：
+- Celery和Redis状态检查
+- 数据库连接检查
+- 数据库迁移状态检查
+
+作者: FOSSASIA
+"""
+
 from errno import errorcode
 
 from redis.exceptions import ConnectionError
@@ -8,23 +21,26 @@ from app.models import db
 
 def health_check_celery():
     """
-    Check health status of celery and redis broker
-    :return:
+    检查Celery和Redis代理的健康状态
+    
+    返回:
+        tuple: (是否健康, 状态消息)
     """
     from app.api.helpers.tasks import celery
 
     try:
+        # 检查Celery工作节点状态
         d = celery.control.inspect().stats()
         if not d:
-            capture_message('No running Celery workers were found.')
-            return False, 'No running Celery workers were found.'
+            capture_message('未找到正在运行的Celery工作节点。')
+            return False, '未找到正在运行的Celery工作节点。'
     except ConnectionError as e:
         capture_exception(e)
-        return False, 'cannot connect to redis server'
+        return False, '无法连接到Redis服务器'
     except OSError as e:
-        msg = "Error connecting to the backend: " + str(e)
+        msg = "连接到后端时出错: " + str(e)
         if len(e.args) > 0 and errorcode.get(e.args[0]) == 'ECONNREFUSED':
-            msg += ' Check that the Redis server is running.'
+            msg += ' 请检查Redis服务器是否正在运行。'
         capture_exception(e)
         return False, msg
     except ImportError as e:
@@ -32,29 +48,34 @@ def health_check_celery():
         return False, str(e)
     except Exception:
         capture_exception()
-        return False, 'celery not ok'
-    return True, 'celery ok'
+        return False, 'Celery状态异常'
+    return True, 'Celery状态正常'
 
 
 def health_check_db():
     """
-    Check health status of db
-    :return:
+    检查数据库的健康状态
+    
+    返回:
+        tuple: (是否健康, 状态消息)
     """
     try:
+        # 执行简单查询测试数据库连接
         db.session.execute('SELECT 1')
-        return True, 'database ok'
+        return True, '数据库连接正常'
     except:
         capture_exception()
-        return False, 'Error connecting to database'
+        return False, '连接数据库时出错'
 
 
 def check_migrations():
     """
-    Checks whether database is up to date with migrations by performing a select query on each model
-    :return:
+    通过在每个模型上执行选择查询来检查数据库是否与迁移保持同步
+    
+    返回:
+        str: 检查结果消息
     """
-    # Get all the models in the db, all models should have a explicit __tablename__
+    # 获取数据库中的所有模型，所有模型都应该有明确的__tablename__
     classes, models, table_names = [], [], []
     # noinspection PyProtectedMember
     for class_ in list(db.Model._decl_class_registry.values()):
@@ -67,18 +88,25 @@ def check_migrations():
         if table[0] in table_names:
             models.append(classes[table_names.index(table[0])])
 
+    # 检查每个模型是否可以正常查询
     for model in models:
         try:
             db.session.query(model).first()
         except:
             capture_exception()
-            return f'failure,{model} model out of date with migrations'
-    return 'success,database up to date with migrations'
+            return f'失败,{model} 模型与迁移不同步'
+    return '成功,数据库与迁移保持同步'
 
 
 def health_check_migrations():
+    """
+    检查数据库迁移状态
+    
+    返回:
+        tuple: (是否健康, 状态消息)
+    """
     result = check_migrations().split(',')
-    if result[0] == 'success':
+    if result[0] == '成功':
         return True, result[1]
-    # the exception will be caught in check_migrations function, so no need for sentry catching exception here
+    # 异常将在check_migrations函数中被捕获，因此这里不需要Sentry捕获异常
     return False, result[1]

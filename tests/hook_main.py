@@ -1,11 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+测试钩子主文件 - Open Event Server API测试钩子
+
+此文件包含Dredd测试框架的钩子，用于在API测试前后设置和清理测试数据。
+提供测试数据的创建、清理和状态管理功能。
+
+作者: FOSSASIA
+"""
+
 import os.path as path
 import sys
 
 import dredd_hooks as hooks
 import requests
 
-# DO NOT REMOVE THIS. This adds the project root for successful imports.
-# Imports from the project directory should be placed only below this
+# 不要移除此行。这添加了项目根目录以确保成功导入。
+# 项目目录中的导入应仅放在此行下面
 sys.path.insert(1, path.abspath(path.join(__file__, "../..")))
 
 from flask_migrate import Migrate
@@ -14,10 +25,10 @@ from app.models import db
 from app.models.role import Role
 from app.models.user_token_blacklist import (  # noqa
     UserTokenBlackListTime,
-)  # Workaround for registering unimported model
-from app.api import routes  # noqa Workaround for importing all required models
+)  # 用于注册未导入模型的解决方法
+from app.api import routes  # noqa 用于导入所有必需模型的解决方法
 
-# imports from factories
+# 从工厂导入
 
 from tests.factories.event_location import EventLocationFactory
 from tests.factories.badge_field_form import BadgeFieldFormFactory
@@ -91,13 +102,21 @@ from tests.all.integration.api.helpers.order.test_calculate_order_amount import 
 from tests.factories.translation_channel import TranslationChannelFactory
 from tests.factories.video_stream import VideoStreamFactoryBase
 
+# 测试数据存储
 stash = {}
+# API测试用户凭据
 api_username = "open_event_test_user@fossasia.org"
 api_password = "fossasia"
 api_uri = "http://localhost:5555/v1/auth/login"
 
 
 def obtain_token():
+    """
+    获取API访问令牌
+    
+    返回:
+        str: 访问令牌
+    """
     data = {"email": api_username, "password": api_password}
     url = api_uri
     response = requests.post(url, json=data)
@@ -108,6 +127,16 @@ def obtain_token():
 
 
 def create_super_admin(email, password):
+    """
+    创建超级管理员用户
+    
+    参数:
+        email (str): 用户邮箱
+        password (str): 用户密码
+        
+    返回:
+        User: 创建的用户对象
+    """
     user = UserFactory(
         email=email,
         password=password,
@@ -122,6 +151,14 @@ def create_super_admin(email, password):
 
 @hooks.before_all
 def before_all(transaction):
+    """
+    在所有测试之前执行的钩子
+    
+    初始化Flask应用和数据库。
+    
+    参数:
+        transaction: 测试事务对象
+    """
     app = Flask(__name__)
     app.config.from_object('config.TestingConfig')
     db.init_app(app)
@@ -132,28 +169,48 @@ def before_all(transaction):
 
 @hooks.before_each
 def before_each(transaction):
+    """
+    在每个测试之前执行的钩子
+    
+    重置数据库并创建超级管理员用户。
+    
+    参数:
+        transaction: 测试事务对象
+    """
     with stash['app'].app_context():
+        # 重置数据库
         db.engine.execute("drop schema if exists public cascade")
         db.engine.execute("create schema public")
         db.engine.execute('create extension if not exists citext')
         db.create_all()
+        # 创建超级管理员
         create_super_admin(api_username, api_password)
 
+    # 获取或创建API令牌
     if 'token' in stash:
-        print('adding a token')
+        print('添加令牌')
     else:
         stash['token'] = obtain_token()
 
+    # 设置授权头
     transaction['request']['headers']['Authorization'] = "JWT " + stash['token']
 
 
 @hooks.after_each
 def after_each(transaction):
+    """
+    在每个测试之后执行的钩子
+    
+    清理数据库会话。
+    
+    参数:
+        transaction: 测试事务对象
+    """
     with stash['app'].app_context():
         db.session.remove()
 
 
-# ------------------------- Authentication -------------------------
+# ------------------------- 认证相关 -------------------------
 @hooks.before("Authentication > JWT Authentication > Authenticate and generate token")
 @hooks.before("Authentication > JWT Authentication > Authenticate with remember me")
 @hooks.before(
@@ -162,17 +219,21 @@ def after_each(transaction):
 def skip_auth(transaction):
     """
     POST /v1/auth/login
-    :param transaction:
-    :return:
+    跳过认证测试的钩子
+    
+    参数:
+        transaction: 测试事务对象
     """
+    # 清空授权头
     transaction['request']['headers']['Authorization'] = ""
     with stash['app'].app_context():
+        # 创建测试用户
         user = UserFactory(
             email="email@example.com", password="password", is_verified=True
         )
         db.session.add(user)
         db.session.commit()
-        print('User Created')
+        print('用户已创建')
 
 
 @hooks.before("Authentication > Re-Authentication > Generate fresh token")
@@ -181,19 +242,23 @@ def skip_auth(transaction):
 def skip_token_refresh(transaction):
     """
     POST /v1/auth/token/refresh
-    :param transaction:
-    :return:
+    跳过令牌刷新测试的钩子
+    
+    参数:
+        transaction: 测试事务对象
     """
     transaction['skip'] = True
 
 
-# ------------------------- Users -------------------------
+# ------------------------- 用户相关 -------------------------
 @hooks.before("Users > Users Collection > List All Users")
 def user_get_list(transaction):
     """
     GET /users
-    :param transaction:
-    :return:
+    获取用户列表测试的钩子
+    
+    参数:
+        transaction: 测试事务对象
     """
     with stash['app'].app_context():
         user = UserFactory()

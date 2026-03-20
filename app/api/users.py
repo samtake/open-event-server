@@ -43,67 +43,73 @@ user_misc_routes = Blueprint('user_misc', __name__, url_prefix='/v1')
 
 class UserList(ResourceList):
     """
-    List and create Users
+    用户列表和创建类
     """
 
     def before_create_object(self, data, view_kwargs):
         """
-        method to check if there is an existing user with same email which is received in data to create a new user
-        and if the password is at least 8 characters long
-        :param data:
-        :param view_kwargs:
+        创建对象前的检查方法，用于检查是否存在与新用户相同邮箱的现有用户
+        以及密码是否至少8个字符长
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 检查密码长度是否至少8个字符
         if len(data['password']) < 8:
-            logging.error('Password should be at least 8 characters long')
+            logging.error('密码应至少8个字符长')
             raise UnprocessableEntityError(
                 {'source': '/data/attributes/password'},
-                'Password should be at least 8 characters long',
+                '密码应至少8个字符长',
             )
+        # 检查邮箱是否已存在
         if (
             db.session.query(User.id).filter_by(email=data['email'].strip()).scalar()
             is not None
         ):
-            logging.error('Email already exists')
+            logging.error('邮箱已存在')
             raise ConflictError(
-                {'pointer': '/data/attributes/email'}, "Email already exists"
+                {'pointer': '/data/attributes/email'}, "邮箱已存在"
             )
 
+        # 不允许用户直接设置验证状态
         if data.get('is_verified'):
-            logging.error("You are not allowed to submit this field")
+            logging.error("您不允许提交此字段")
             raise UnprocessableEntityError(
                 {'pointer': '/data/attributes/is-verified'},
-                "You are not allowed to submit this field",
+                "您不允许提交此字段",
             )
 
     def after_create_object(self, user, data, view_kwargs):
         """
-        method to send-
-        email notification
-        mail link for register verification
-        add image urls
-        :param user:
-        :param data:
-        :param view_kwargs:
+        创建对象后的方法，用于发送：
+        - 邮件通知
+        - 注册验证邮件链接
+        - 添加图片URL
+        :param user: 用户对象
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
 
+        # 发送用户注册邮件
         send_user_register_email(user)
-        # TODO Handle in a celery task
+        # TODO 在celery任务中处理
         # if data.get('original_image_url'):
         #     try:
         #         uploaded_images = create_save_image_sizes(data['original_image_url'], 'speaker-image', user.id)
         #     except (urllib.error.HTTPError, urllib.error.URLError):
         #         raise UnprocessableEntityError(
-        #             {'source': 'attributes/original-image-url'}, 'Invalid Image URL'
+        #             {'source': 'attributes/original-image-url'}, '图片URL无效'
         #         )
         #     uploaded_images['small_image_url'] = uploaded_images['thumbnail_image_url']
         #     del uploaded_images['large_image_url']
         #     self.session.query(User).filter_by(id=user.id).update(uploaded_images)
 
+        # 如果提供了头像URL，则开始图片调整任务
         if data.get('avatar_url'):
             start_image_resizing_tasks(user, data['avatar_url'])
 
+    # 权限装饰器，只有管理员才能执行GET方法
     decorators = (api.has_permission('is_admin', methods="GET"),)
     schema = UserSchema
     data_layer = {

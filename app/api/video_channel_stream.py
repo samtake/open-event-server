@@ -10,9 +10,11 @@ from app.models.video_stream import VideoStream
 
 
 class VideoChannelListPost(ResourceList):
-    """Post to Video Channel List"""
+    """发布到视频通道列表"""
 
+    # 允许的方法
     methods = ['POST']
+    # 权限装饰器，只有管理员才能执行POST方法
     decorators = (api.has_permission('is_admin', methods="POST"),)
     schema = VideoChannelSchema
     data_layer = {
@@ -22,15 +24,18 @@ class VideoChannelListPost(ResourceList):
 
 
 class VideoChannelList(ResourceList):
-    """List of Video Channels"""
+    """视频通道列表"""
 
     def before_get(self, unused_args, unused_kwargs):
-        """Providing the requester with the (public) video channel schema"""
+        """为请求者提供（公共）视频通道模式"""
+        # 如果用户已登录且有管理员权限，则使用完整模式
         if is_logged_in() and has_access('is_admin'):
             self.schema = VideoChannelSchema
         else:
+            # 否则使用公共模式
             self.schema = VideoChannelSchemaPublic
 
+    # 允许的方法
     methods = ['GET']
     schema = VideoChannelSchemaPublic
     data_layer = {
@@ -40,16 +45,17 @@ class VideoChannelList(ResourceList):
 
 
 class VideoChannelDetail(ResourceDetail):
-    """Details of Video Channel"""
+    """视频通道详情"""
 
     def before_get(self, unused_args, kwargs):
         """
-        Providing the requester with the (public) video channel schema,
-        as well as further details.
+        为请求者提供（公共）视频通道模式，以及更多详情。
         """
+        # 如果用户已登录且有管理员权限，则使用完整模式
         if is_logged_in() and has_access('is_admin'):
             self.schema = VideoChannelSchema
         else:
+            # 否则使用公共模式
             self.schema = VideoChannelSchemaPublic
 
         if kwargs.get('video_stream_id'):

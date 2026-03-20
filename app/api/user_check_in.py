@@ -26,14 +26,15 @@ from app.models.user_check_in import UserCheckIn
 
 
 class UserCheckInList(ResourceList):
-    """Get List User Check In"""
+    """获取用户签到列表"""
 
     def query(self, _view_kwargs):
         """
-        Retrieve all user check in data
-        @param _view_kwargs:
+        检索所有用户签到数据
+        @param _view_kwargs: 视图关键字参数
         @return:
         """
+        # 查询所有用户签到数据
         query_ = self.session.query(UserCheckIn)
 
         return query_

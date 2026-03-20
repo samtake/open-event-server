@@ -20,6 +20,7 @@ from app.models.speaker import Speaker
 from app.models.speaker_invite import SpeakerInvite
 from app.models.user import User
 
+# 演讲者邀请相关路由蓝图
 speaker_invites_misc_routes = Blueprint(
     'speaker_invites_misc', __name__, url_prefix='/v1'
 )
@@ -27,24 +28,27 @@ speaker_invites_misc_routes = Blueprint(
 
 class SpeakerInviteListPost(ResourceList):
     """
-    Create speaker invites
+    创建演讲者邀请
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before get method to get the resource id for fetching details
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于获取资源ID以获取详情
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（会话、事件）
         require_relationship(['session', 'event'], data)
+        # 检查用户是否有会话演讲者权限
         if not has_access('is_speaker_for_session', id=data['session']):
-            raise ForbiddenError({'source': ''}, 'Speaker access is required.')
+            raise ForbiddenError({'source': ''}, '需要演讲者权限。')
+        # 检查状态是否为待处理
         if data.get('status'):
             if not data['status'] == 'pending':
                 raise ForbiddenError(
-                    {'source': ''}, 'Speaker Invite can not created with accepted status.'
+                    {'source': ''}, '演讲者邀请不能以已接受状态创建。'
                 )
 
     def before_create_object(self, data, view_kwargs):

@@ -31,13 +31,21 @@ from app.models.user import User
 
 class DiscountCodeListPost(ResourceList):
     """
-    Create Event and Ticket Discount code and Get Event Discount Codes
+    创建事件和门票折扣码并获取事件折扣码
     """
 
     def decide_schema(self, json_data):
-        """To decide discount code schema based on posted data.
-        :param json_data:
-        :return:"""
+        """
+        根据提交的数据决定折扣码模式
+        
+        根据used-for属性的值选择合适的Schema。
+        
+        参数:
+            json_data: JSON数据
+            
+        返回:
+            适当的Schema类
+        """
 
         used_for = json_data['data']['attributes'].get('used-for')
         if used_for in ('event', 'ticket'):
@@ -52,11 +60,20 @@ class DiscountCodeListPost(ResourceList):
             )
 
     def before_post(self, args, kwargs, data):
-        """Before post method to check required relationships and set user_id
-        :param args:
-        :param kwargs:
-        :param data:
-        :return:"""
+        """
+        创建前的预处理
+        
+        检查必要的关联关系和权限，并设置市场人员ID。
+        
+        参数:
+            args: 位置参数
+            kwargs: 关键字参数
+            data: 请求数据
+            
+        异常:
+            ForbiddenError: 当用户没有权限时抛出
+            UnprocessableEntityError: 当数据无效时抛出
+        """
         if data['used_for'] == 'ticket':
             require_relationship(['event'], data)
             if not has_access('is_coorganizer', event_id=data['event']):
@@ -73,6 +90,19 @@ class DiscountCodeListPost(ResourceList):
         data['marketer_id'] = current_user.id
 
     def before_create_object(self, data, view_kwargs):
+        """
+        创建对象前的处理
+        
+        验证折扣码的唯一性，检查事件是否存在，以及事件是否已有折扣码。
+        
+        参数:
+            data: 请求数据
+            view_kwargs: 视图关键字参数
+            
+        异常:
+            ConflictError: 当折扣码已存在时抛出
+            UnprocessableEntityError: 当事件不存在或已有折扣码时抛出
+        """
         if data.get('used_for') == 'ticket' and (event_id := data.get('event')):
             discount_codes = DiscountCode.query.filter_by(
                 event_id=event_id, code=data['code'], deleted_at=None
@@ -135,12 +165,21 @@ class DiscountCodeList(ResourceList):
 
     def query(self, view_kwargs):
         """
-        query method for Discount Code List
-        :param view_kwargs:
-        :return:
+        折扣码列表查询方法
+        
+        根据视图参数构建折扣码查询，包括用户折扣码、事件折扣码和票券折扣码。
+        
+        参数:
+            view_kwargs: 视图关键字参数，包含用户ID、事件ID、票券ID等
+            
+        返回:
+            Query: 构建好的查询对象
+            
+        异常:
+            ForbiddenError: 当用户没有权限访问时抛出
         """
         query_ = self.session.query(DiscountCode)
-        # user can only access his/her discount codes.
+        # 用户只能访问自己的折扣码
         if view_kwargs.get('user_id'):
             if has_access('is_user_itself', user_id=view_kwargs['user_id']):
                 user = safe_query_kwargs(User, view_kwargs, 'user_id')
@@ -148,6 +187,7 @@ class DiscountCodeList(ResourceList):
             else:
                 raise ForbiddenError({'source': ''}, 'You are not authorized')
 
+        # 处理事件标识符参数
         if view_kwargs.get('event_identifier'):
             event = safe_query_kwargs(
                 Event,
@@ -157,7 +197,7 @@ class DiscountCodeList(ResourceList):
             )
             view_kwargs['event_id'] = event.id
 
-        # event co-organizer access required for discount codes under an event.
+        # 事件共同组织者权限检查
         if view_kwargs.get('event_id'):
             if has_access('is_coorganizer', event_id=view_kwargs['event_id']):
                 self.schema = DiscountCodeSchemaTicket
@@ -165,7 +205,7 @@ class DiscountCodeList(ResourceList):
             else:
                 raise ForbiddenError({'source': ''}, 'Event organizer access required')
 
-        # discount_code - ticket :: many-to-many relationship
+        # 处理票券折扣码（多对多关系）
         if view_kwargs.get('ticket_id'):
             ticket = safe_query_kwargs(Ticket, view_kwargs, 'ticket_id')
             if not has_access('is_coorganizer', event_id=ticket.event_id):

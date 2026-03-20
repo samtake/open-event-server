@@ -16,38 +16,46 @@ from app.models import db
 from app.models.setting import Setting
 from app.settings import refresh_settings
 
+# 管理员杂项路由蓝图
 admin_misc_routes = Blueprint('admin_misc', __name__, url_prefix='/v1')
 
 
 class Environment:
+    """环境类"""
     def __init__(self):
         pass
 
-    DEVELOPMENT = 'development'
-    STAGING = 'staging'
-    PRODUCTION = 'production'
-    TESTING = 'testing'
+    # 环境常量
+    DEVELOPMENT = 'development'  # 开发环境
+    STAGING = 'staging'        # 预发布环境
+    PRODUCTION = 'production'  # 生产环境
+    TESTING = 'testing'        # 测试环境
 
 
 class SettingDetail(ResourceDetail):
     """
-    setting detail by id
+    根据ID获取设置详情
     """
 
     def before_get(self, args, kwargs):
+        # 检查是否需要刷新设置
         refresh = request.args.get('refresh')
         if refresh == 'true':
             refresh_settings()
+        # 设置ID为1
         kwargs['id'] = 1
 
+        # 如果用户已登录
         if is_logged_in():
             verify_jwt_in_request()
 
+            # 根据用户权限选择不同的模式
             if current_user.is_admin or current_user.is_super_admin:
                 self.schema = SettingSchemaAdmin
             else:
                 self.schema = SettingSchemaNonAdmin
         else:
+            # 未登录用户使用公共模式
             self.schema = SettingSchemaPublic
 
     decorators = (api.has_permission('is_admin', methods="PATCH", id="1"),)

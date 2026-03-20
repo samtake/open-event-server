@@ -25,17 +25,22 @@ tickets_routes = Blueprint('tickets_routes', __name__, url_prefix='/v1/events')
 
 @tickets_routes.route('/<id>/tickets/availability')
 def get_stock(id):
+    """获取事件门票库存信息"""
     event_id = id
 
+    # 如果id不是数字，则根据标识符查找事件
     if not id.isnumeric():
         event_id = Event.query.filter_by(identifier=id).first_or_404().id
 
+    # 获取事件的所有门票
     tickets = Ticket.query.filter_by(
         event_id=event_id, deleted_at=None, is_hidden=False
     ).all()
+    
     stock = []
     for ticket in tickets:
         availability = {}
+        # 计算剩余票数
         total_count = ticket.quantity - get_sold_and_reserved_tickets_count(ticket.id)
         availability["id"] = ticket.id
         availability["name"] = ticket.name

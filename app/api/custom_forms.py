@@ -17,24 +17,26 @@ from app.models.event import Event
 
 class CustomFormListPost(ResourceList):
     """
-    Create and List Custom Forms
+    创建和列出自定义表单
     """
 
     def before_post(self, args, kwargs, data):
         """
-        method to check for required relationship with event
-        :param args:
-        :param kwargs:
-        :param data:
+        检查与事件的必需关系的方法
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
             raise ObjectNotFound(
-                {'parameter': 'event_id'}, "Event: {} not found".format(data['event_id'])
+                {'parameter': 'event_id'}, "找不到事件: {}".format(data['event_id'])
             )
 
-        # Assign is_complex to True if not found in identifier map of form type
+        # 如果在表单类型的标识符映射中未找到，则将is_complex设置为True
         data['is_complex'] = (
             CUSTOM_FORM_IDENTIFIER_NAME_MAP[data['form']].get(data['field_identifier'])
             is None

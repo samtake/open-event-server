@@ -30,7 +30,13 @@ logger = logging.getLogger(__name__)
 
 def check_smtp_config(config):
     """
-    Checks config of SMTP
+    检查SMTP配置
+    
+    参数:
+        config: SMTP配置项
+        
+    返回:
+        bool: 配置是否有效
     """
     for field in config:
         if field is None:
@@ -40,27 +46,46 @@ def check_smtp_config(config):
 
 def send_email(to, action, subject, html, attachments=None, bcc=None, reply_to=None):
     """
-    Sends email and records it in DB
+    发送邮件并在数据库中记录
+    
+    参数:
+        to: 收件人邮箱或用户对象
+        action: 邮件动作类型
+        subject: 邮件主题
+        html: 邮件HTML内容
+        attachments: 附件列表
+        bcc: 密送列表
+        reply_to: 回复邮箱
+        
+    返回:
+        bool: 发送是否成功
     """
     from .tasks import get_smtp_config, send_email_task_sendgrid, send_email_task_smtp
 
+    # 检查是否启用了该类型的邮件
     if not MessageSettings.is_enabled(action):
-        logger.info("Mail of type %s is not enabled. Hence, skipping...", action)
+        logger.info("类型为 %s 的邮件未启用，因此跳过...", action)
         return
 
+    # 处理收件人参数
     if isinstance(to, User):
-        logger.warning('to argument should be an email string, not a User object')
+        logger.warning('to参数应该是邮箱字符串，而不是用户对象')
         to = to.email
 
+    # 检查收件人是否为空
     if string_empty(to):
-        logger.warning('Recipient cannot be empty')
+        logger.warning('收件人不能为空')
         return False
+    
+    # 获取邮件配置
     email_service = get_settings()['email_service']
     email_from_name = get_settings()['email_from_name']
     if email_service == 'smtp':
         email_from = email_from_name + '<' + get_settings()['email_from'] + '>'
     else:
         email_from = get_settings()['email_from']
+    
+    # 构建邮件载荷
     payload = {
         'to': to,
         'from': email_from,
@@ -71,30 +96,37 @@ def send_email(to, action, subject, html, attachments=None, bcc=None, reply_to=N
         'reply_to': reply_to,
     }
 
+    # 根据邮件服务类型发送邮件
     if not (current_app.config['TESTING'] or email_service == 'disable'):
         if email_service == 'smtp':
+            # SMTP邮件服务
             smtp_status = check_smtp_config(get_smtp_config())
             if smtp_status:
                 send_email_task_smtp.delay(payload)
             else:
-                logger.error('SMTP is not configured properly. Cannot send email.')
+                logger.error('SMTP配置不正确，无法发送邮件。')
         elif email_service == 'sendgrid':
+            # SendGrid邮件服务
             key = get_settings().get('sendgrid_key')
             if key:
                 payload['fromname'] = email_from_name
                 send_email_task_sendgrid.delay(payload)
             else:
-                logger.error('SMTP & sendgrid have not been configured properly')
+                logger.error('SMTP和SendGrid都未正确配置')
         else:
+            # 无效的邮件服务设置
             logger.error(
-                'Invalid Email Service Setting: %s. Skipping email', email_service
+                '无效的邮件服务设置: %s。跳过邮件发送', email_service
             )
     else:
-        logger.warning('Email Service is disabled in settings, so skipping email')
+        # 邮件服务已禁用
+        logger.warning('设置中禁用了邮件服务，因此跳过邮件发送')
 
+    # 记录邮件发送
     mail_recorder = current_app.config['MAIL_RECORDER']
     mail_recorder.record(payload)
 
+    # 在数据库中记录邮件
     mail = Mail(
         recipient=to,
         action=action,
@@ -110,11 +142,19 @@ def send_email(to, action, subject, html, attachments=None, bcc=None, reply_to=N
 
 def send_email_with_action(user, action, template_name, bcc=None, **kwargs):
     """
-    A general email helper to use in the APIs
-    :param user: email or user to which email is to be sent
-    :param action:
-    :param kwargs:
-    :return:
+    带动作的邮件发送助手
+    
+    用于API的通用邮件发送助手，根据动作类型发送相应的邮件。
+    
+    参数:
+        user: 收件人邮箱或用户对象
+        action: 邮件动作类型
+        template_name: 邮件模板名称
+        bcc: 密送列表
+        **kwargs: 传递给模板的额外参数
+        
+    返回:
+        bool: 发送是否成功
     """
     if not MessageSettings.is_enabled(action):
         logger.info("Mail of type %s is not enabled. Hence, skipping...", action)
@@ -135,7 +175,13 @@ def send_email_with_action(user, action, template_name, bcc=None, **kwargs):
 
 
 def send_email_confirmation(email, link):
-    """account confirmation"""
+    """
+    发送账户确认邮件
+    
+    参数:
+        email: 收件人邮箱
+        link: 确认链接
+    """
     action = MailType.USER_CONFIRM
     app_name = get_settings()['app_name']
     mail = MAILS[action]
@@ -148,7 +194,14 @@ def send_email_confirmation(email, link):
 
 
 def send_email_new_session(email, session, speakers):
-    """email for new session"""
+    """
+    发送新会话邮件
+    
+    参数:
+        email: 收件人邮箱
+        session: 会话对象
+        speakers: 演讲者列表
+    """
     app_name = get_settings()['app_name']
     front_page = get_settings()['frontend_url']
     session_overview_link = session.event.organizer_site_link + "/sessions/pending"
@@ -170,7 +223,13 @@ def send_email_new_session(email, session, speakers):
 
 
 def send_email_ticket_sales_end(event, emails):
-    """email for ticket sales end"""
+    """
+    发送票券销售结束邮件
+    
+    参数:
+        event: 事件对象
+        emails: 收件人邮箱列表
+    """
     action = MailType.TICKET_SALES_END
     mail = MAILS[action]
     settings = get_settings()

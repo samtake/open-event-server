@@ -13,23 +13,25 @@ from app.models.ticket import Ticket, TicketTag, ticket_tags_table
 
 class TicketTagListPost(ResourceList):
     """
-    List and create TicketTag
+    门票标签列表和创建类
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method for checking required relationship
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
-
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, 'Co-organizer access is required.')
+            raise ForbiddenError({'source': ''}, '需要共同组织者权限。')
 
     schema = TicketTagSchema
+    # 允许的方法
     methods = [
         'POST',
     ]
@@ -38,13 +40,13 @@ class TicketTagListPost(ResourceList):
 
 class TicketTagList(ResourceList):
     """
-    List TicketTags based on event_id or ticket_id
+    根据事件ID或门票ID列出门票标签
     """
 
     def query(self, view_kwargs):
         """
-        method to query Ticket tags based on different params
-        :param view_kwargs:
+        根据不同参数查询门票标签的方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         query_ = self.session.query(TicketTag)

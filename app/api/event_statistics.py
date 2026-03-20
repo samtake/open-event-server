@@ -9,20 +9,23 @@ from app.models.event import Event
 
 class EventStatisticsGeneralDetail(ResourceDetail):
     """
-    Event statistics detail by id
+    根据ID获取事件统计详情
     """
 
     def before_get_object(self, view_kwargs):
         """
-        before get method to get the resource id to fetch details
-        :param view_kwargs:
+        get方法前的检查方法，用于获取资源ID以获取详情
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 如果提供了标识符，则获取事件并设置ID
         if view_kwargs.get('identifier'):
             event = safe_query_kwargs(Event, view_kwargs, 'identifier', 'identifier')
             view_kwargs['id'] = event.id
 
+    # 允许的方法
     methods = ['GET']
+    # 权限装饰器，只有共同组织者才能访问
     decorators = (
         api.has_permission(
             'is_coorganizer', fetch="id", fetch_as="event_id", model=Event

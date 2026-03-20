@@ -15,32 +15,36 @@ from app.models.user_favourite_event import UserFavouriteEvent
 
 class UserFavouriteEventListPost(ResourceList):
     """
-    Create User Favourite Events
+    创建用户收藏事件
     """
 
     @classmethod
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
 
+        # 检查用户是否已登录
         if is_logged_in():
             verify_jwt_in_request()
         else:
             raise ForbiddenError(
-                {'source': ''}, 'Only Authorized Users can favourite an event'
+                {'source': ''}, '只有授权用户才能收藏事件'
             )
 
+        # 设置用户ID
         data['user'] = current_user.id
+        # 检查事件是否已被收藏
         user_favourite_event = find_user_favourite_event_by_id(event_id=data['event'])
         if user_favourite_event:
             raise ConflictError(
-                {'pointer': '/data/relationships/event'}, "Event already favourited"
+                {'pointer': '/data/relationships/event'}, "事件已被收藏"
             )
 
     view_kwargs = True

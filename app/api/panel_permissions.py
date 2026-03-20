@@ -10,16 +10,18 @@ from app.models.panel_permission import PanelPermission
 
 class PanelPermissionList(ResourceList):
     """
-    List Panel Permission
+    列出面板权限
     """
 
     def query(self, view_kwargs):
         """
-        query method for Panel Permission List
-        :param view_kwargs:
+        面板权限列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 查询所有面板权限
         query_ = self.session.query(PanelPermission)
+        # 如果提供了自定义系统角色ID，则过滤该角色的权限
         if view_kwargs.get('custom_system_role_id'):
             role = safe_query_kwargs(
                 CustomSysRole,
@@ -32,6 +34,7 @@ class PanelPermissionList(ResourceList):
 
         return query_
 
+    # 权限装饰器，只有管理员才能访问
     decorators = (api.has_permission('is_admin', methods="GET,POST"),)
     schema = PanelPermissionSchema
     data_layer = {
@@ -43,10 +46,11 @@ class PanelPermissionList(ResourceList):
 
 class PanelPermissionDetail(ResourceDetail):
     """
-    Panel Permission detail by id
+    根据ID获取面板权限详情
     """
 
     schema = PanelPermissionSchema
+    # 权限装饰器，只有管理员才能访问
     decorators = (api.has_permission('is_admin', methods="GET,PATCH,DELETE"),)
     data_layer = {'session': db.session, 'model': PanelPermission}
 

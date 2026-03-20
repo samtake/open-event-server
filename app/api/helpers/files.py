@@ -20,10 +20,26 @@ from app.settings import get_settings
 
 
 def get_file_name():
+    """
+    生成唯一文件名
+    
+    返回:
+        str: UUID格式的文件名
+    """
     return str(uuid.uuid4())
 
 
 def uploaded_image(extension='.png', file_content=None):
+    """
+    处理上传的图片文件
+    
+    参数:
+        extension: 文件扩展名
+        file_content: 文件内容（base64编码）
+        
+    返回:
+        UploadedFile: 上传文件对象
+    """
     filename = get_file_name() + extension
     filedir = current_app.config.get('BASE_DIR') + '/static/uploads/'
     if not os.path.isdir(filedir):
@@ -36,7 +52,18 @@ def uploaded_image(extension='.png', file_content=None):
 
 
 def uploaded_file(files, multiple=False):
+    """
+    处理上传的文件
+    
+    参数:
+        files: 文件对象或文件列表
+        multiple: 是否处理多个文件
+        
+    返回:
+        UploadedFile或UploadedFile列表: 上传文件对象
+    """
     if multiple:
+        # 处理多个文件
         files_uploaded = []
         for file in files:
             extension = file.filename.split('.')[1]
@@ -49,6 +76,7 @@ def uploaded_file(files, multiple=False):
             files_uploaded.append(UploadedFile(file_path, filename))
 
     else:
+        # 处理单个文件
         extension = files.filename.split('.')[1]
         filename = get_file_name() + '.' + extension
         filedir = current_app.config.get('BASE_DIR') + '/static/uploads/'
@@ -72,16 +100,23 @@ def create_save_resized_image(
     resize=True,
 ):
     """
-    Create and Save the resized version of the background image
-    :param resize:
-    :param upload_path:
-    :param ext:
-    :param remove_after_upload:
-    :param height_size:
-    :param maintain_aspect:
-    :param basewidth:
-    :param image_file:
-    :return:
+    创建并保存背景图片的调整大小版本
+    
+    参数:
+        image_file: 图片文件URL或路径
+        basewidth: 基础宽度
+        maintain_aspect: 是否保持宽高比
+        height_size: 高度大小
+        upload_path: 上传路径
+        ext: 文件扩展名
+        remove_after_upload: 上传后是否删除原文件
+        resize: 是否调整大小
+        
+    返回:
+        str: 上传后的图片URL
+        
+    异常:
+        OSError: 当图片文件损坏或无效时抛出
     """
     if not image_file:
         return None
@@ -91,9 +126,9 @@ def create_save_resized_image(
     try:
         im = Image.open(image_file)
     except OSError:
-        raise OSError("Corrupt/Invalid Image")
+        raise OSError("损坏或无效的图片")
 
-    # Convert to jpeg for lower file size.
+    # 转换为jpeg以减小文件大小
     if im.format != 'JPEG':
         img = im.convert('RGB')
     else:

@@ -47,12 +47,26 @@ from app.models.ticket_holder import TicketHolder
 from app.models.user import User
 from app.settings import get_settings
 
+# 订单相关路由蓝图
 order_misc_routes = Blueprint('order_misc', __name__, url_prefix='/v1')
 alipay_blueprint = Blueprint('alipay_blueprint', __name__, url_prefix='/v1/alipay')
 stripe_blueprint = Blueprint('stripe_blueprint', __name__, url_prefix='/v1/stripe')
 
 
 def check_event_user_ticket_holders(order, data, element):
+    """
+    检查事件、用户和票券持有者是否可更新
+    
+    验证订单的事件、用户和票券持有者字段是否可以被更新。
+    
+    参数:
+        order: 订单对象
+        data: 更新数据
+        element: 要检查的元素名称
+        
+    异常:
+        ForbiddenError: 当元素不可更新时抛出
+    """
     if element in ['event', 'user'] and data[element] != str(
         getattr(order, element, None).id
     ):
@@ -72,6 +86,18 @@ def check_event_user_ticket_holders(order, data, element):
 
 
 def is_payment_valid(order, mode):
+    """
+    检查支付是否有效
+    
+    验证订单的支付信息是否完整有效。
+    
+    参数:
+        order: 订单对象
+        mode: 支付模式（'stripe'或'paypal'）
+        
+    返回:
+        bool: 支付信息是否有效
+    """
     if mode == 'stripe':
         return (
             (order.paid_via == 'stripe')
@@ -86,6 +112,17 @@ def is_payment_valid(order, mode):
 
 
 def check_billing_info(data):
+    """
+    检查账单信息
+    
+    验证订单的账单信息是否完整。
+    
+    参数:
+        data: 订单数据
+        
+    异常:
+        UnprocessableEntityError: 当账单信息不完整时抛出
+    """
     if (
         data.get('amount')
         and data.get('amount') > 0
@@ -109,6 +146,14 @@ def check_billing_info(data):
 
 
 def save_order(order):
+    """
+    保存订单
+    
+    保存订单及其关联的票券持有者，并处理订单完成后的逻辑。
+    
+    参数:
+        order: 订单对象
+    """
     order_tickets = {}
     for holder in order.ticket_holders:
         save_to_db(holder)
@@ -132,6 +177,17 @@ def save_order(order):
 
 
 def validate_attendees(ticket_holders):
+    """
+    验证参会者
+    
+    验证参会者信息，检查未验证用户是否可以订购免费票。
+    
+    参数:
+        ticket_holders: 票券持有者列表
+        
+    异常:
+        ForbiddenError: 当未验证用户尝试订购免费票时抛出
+    """
     free_ticket_quantity = 0
 
     for ticket_holder in validate_ticket_holders(ticket_holders):
@@ -149,36 +205,44 @@ def validate_attendees(ticket_holders):
 
 class OrdersListPost(ResourceList):
     """
-    OrderListPost class for OrderSchema
+    订单列表创建类
+    
+    处理订单的创建请求，验证数据并创建订单。
     """
 
     def before_post(self, args, kwargs, data=None):
         """
-        before post method to check for required relationships and permissions
-        :param args:
-        :param kwargs:
-        :param data:
-        :return:
+        创建订单前的预处理
+        
+        检查必要的关联关系和权限，处理现场参会者创建。
+        
+        参数:
+            args: 位置参数
+            kwargs: 关键字参数
+            data: 请求数据
         """
         require_relationship(['event'], data)
 
-        # Create on site attendees.
+        # 创建现场参会者
         if request.args.get('onsite', False):
             create_onsite_attendees_for_order(data)
         elif data.get('on_site_tickets'):
             del data['on_site_tickets']
         require_relationship(['ticket_holders'], data)
 
-        # Ensuring that default status is always initializing, unless the user is event co-organizer
+        # 确保默认状态为初始化，除非用户是事件共同组织者
         if not has_access('is_coorganizer', event_id=data['event']):
             data['status'] = 'initializing'
 
     def before_create_object(self, data, view_kwargs):
         """
-        before create object method for OrderListPost Class
-        :param data:
-        :param view_kwargs:
-        :return:
+        创建订单对象前的处理
+        
+        验证参会者信息，检查订单金额等。
+        
+        参数:
+            data: 订单数据
+            view_kwargs: 视图关键字参数
         """
         validate_attendees(data['ticket_holders'])
 
@@ -639,9 +703,19 @@ def alipay_return_uri(order_identifier):
 @jwt_required
 def omise_checkout(order_identifier):
     """
-    Charging the user and returning payment response for Omise Gateway
-    :param order_identifier:
-    :return: JSON response of the payment status.
+    Omise支付网关结账处理
+    
+    使用Omise支付网关对用户进行收费并返回支付响应。
+    此函数需要JWT认证才能访问，确保只有已登录用户才能进行支付。
+    
+    参数:
+        order_identifier (str): 订单标识符
+        
+    返回:
+        JSON: 支付状态的JSON响应
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此端点
     """
     token = request.form.get('omiseToken')
     order = safe_query(Order, 'identifier', order_identifier, 'identifier')
@@ -680,9 +754,19 @@ def omise_checkout(order_identifier):
 @jwt_required
 def initiate_transaction(order_identifier):
     """
-    Initiating a PayTM transaction to obtain the txn token
-    :param order_identifier:
-    :return: JSON response containing the signature & txn token
+    初始化PayTM交易以获取交易令牌
+    
+    发起PayTM交易以获取交易令牌，用于后续的支付流程。
+    此函数需要JWT认证才能访问，确保只有已登录用户才能初始化交易。
+    
+    参数:
+        order_identifier (str): 订单标识符
+        
+    返回:
+        JSON: 包含签名和交易令牌的JSON响应
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此端点
     """
     order = safe_query(Order, 'identifier', order_identifier, 'identifier')
     paytm_mode = get_settings()['paytm_mode']

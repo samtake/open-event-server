@@ -8,10 +8,12 @@ from app.models.mail import Mail
 
 class MailList(ResourceList):
     """
-    List and create mails
+    列出和创建邮件
     """
 
+    # 权限装饰器，只有管理员才能访问
     decorators = (api.has_permission('is_admin'),)
+    # 允许的方法
     methods = ['GET']
     schema = MailSchema
     data_layer = {'session': db.session, 'model': Mail}
@@ -19,10 +21,12 @@ class MailList(ResourceList):
 
 class MailDetail(ResourceDetail):
     """
-    Mail detail by id
+    根据ID获取邮件详情
     """
 
+    # 允许的方法
     methods = ['GET']
     schema = MailSchema
+    # 权限装饰器，只有管理员才能访问
     decorators = (api.has_permission('is_admin'),)
     data_layer = {'session': db.session, 'model': Mail}

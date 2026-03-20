@@ -10,16 +10,18 @@ from app.models.panel_permission import PanelPermission
 
 class CustomSystemRoleList(ResourceList):
     """
-    List and create Custom System Role
+    列出和创建自定义系统角色
     """
 
     def query(self, view_kwargs):
         """
-        query method for Panel Permission List
-        :param view_kwargs:
+        面板权限列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 查询所有自定义系统角色
         query_ = self.session.query(CustomSysRole)
+        # 如果提供了面板ID，则过滤该面板的角色
         if view_kwargs.get('panel_id'):
             panel = safe_query_kwargs(PanelPermission, view_kwargs, 'panel_id')
             query_ = CustomSysRole.query.filter(
@@ -28,6 +30,7 @@ class CustomSystemRoleList(ResourceList):
 
         return query_
 
+    # 权限装饰器，只有管理员才能执行POST方法
     decorators = (api.has_permission('is_admin', methods="POST"),)
     schema = CustomSystemRoleSchema
     data_layer = {
@@ -39,13 +42,13 @@ class CustomSystemRoleList(ResourceList):
 
 class CustomSystemRoleDetail(ResourceDetail):
     """
-    Custom System Role detail by id
+    根据ID获取自定义系统角色详情
     """
 
     def before_get_object(self, view_kwargs):
         """
-        before get method for user object
-        :param view_kwargs:
+        获取用户对象前的检查方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         if view_kwargs.get('role_id') is not None:

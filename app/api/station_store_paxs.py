@@ -12,24 +12,29 @@ from app.models.station_store_pax import StationStorePax
 
 
 class StationStorePaxList(ResourceList):
-    """Create and List Station Store Pax"""
+    """创建和列出站点存储人数"""
 
     def query(self, view_kwargs):
         """
-        query method for different view_kwargs
-        :param view_kwargs:
+        不同view_kwargs的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 查询所有站点存储人数
         query_ = self.session.query(StationStorePax)
+        # 如果提供了站点ID，则过滤该站点的数据
         if view_kwargs.get('station_id'):
             query_ = query_.join(Station).filter_by(id=view_kwargs.get('station_id'))
+        # 如果提供了会话ID，则过滤该会话的数据
         if view_kwargs.get('session_id'):
             query_ = query_.join(Session).filter_by(id=view_kwargs.get('session_id'))
 
         return query_
 
     view_kwargs = True
+    # 需要JWT认证
     decorators = (jwt_required,)
+    # 允许的方法
     methods = [
         'GET',
     ]
@@ -42,12 +47,12 @@ class StationStorePaxList(ResourceList):
 
 
 class StationStorePaxDetail(ResourceDetail):
-    """StationStorePax detail by id"""
+    """根据ID获取站点存储人数详情"""
 
     @staticmethod
     def before_patch(_args, _kwargs, data):
         """
-        before patch method
+        patch方法前的检查方法
         :param _args:
         :param kwargs:
         :param data:

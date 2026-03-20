@@ -11,16 +11,18 @@ from app.models.event_sub_topic import EventSubTopic
 
 class CustomPlaceholderList(ResourceList):
     """
-    List and create event custom placeholders
+    列出和创建事件自定义占位符
     """
 
     def query(self, view_kwargs):
         """
-        query method for custom placeholders list
-        :param view_kwargs:
+        自定义占位符列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 查询所有自定义占位符
         query_ = self.session.query(CustomPlaceholder)
+        # 如果提供了事件子主题ID，则过滤该子主题的占位符
         if view_kwargs.get('event_sub_topic_id'):
             event_sub_topic = safe_query_kwargs(
                 EventSubTopic,
@@ -34,11 +36,12 @@ class CustomPlaceholderList(ResourceList):
 
     def before_create_object(self, data, view_kwargs):
         """
-        method to create object before post
-        :param data:
-        :param view_kwargs:
+        post前创建对象的方法
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 如果提供了事件子主题ID，则设置占位符的事件子主题ID
         if view_kwargs.get('event_sub_topic_id'):
             event_sub_topic = safe_query_kwargs(
                 EventSubTopic,

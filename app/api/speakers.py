@@ -20,32 +20,44 @@ from app.models.user import User
 
 
 def check_email_override(data, event_id, speaker=None):
+    """
+    检查邮箱覆盖设置
+    
+    :param data: 数据
+    :param event_id: 事件ID
+    :param speaker: 演讲者对象
+    """
+    # 检查用户是否为组织者
     is_organizer = has_access('is_organizer', event_id=event_id)
     email_overridden = data.get('is_email_overridden')
+    # 如果尝试覆盖邮箱但不是组织者，则抛出错误
     if email_overridden and not is_organizer:
         raise ForbiddenError(
             {'pointer': '/data/attributes/is_email_overridden'},
-            'Organizer access required to override email',
+            '覆盖邮箱需要组织者权限',
         )
+    # 如果没有提供覆盖设置但已有演讲者，则使用现有设置
     if not email_overridden and speaker:
         email_overridden = speaker.is_email_overridden
+    # 如果邮箱被覆盖，则设置为空
     if email_overridden:
         data['email'] = None
+    # 如果没有提供邮箱或不是组织者，则使用当前用户邮箱
     elif not data.get('email') or not is_organizer:
         data['email'] = current_user.email
 
 
 class SpeakerListPost(ResourceList):
     """
-    List and create speakers
+    演讲者列表和创建类
     """
 
     def before_post(self, args, kwargs, data=None):
         """
-        method to add user_id to view_kwargs before post
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于添加user_id到view_kwargs
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
         data['user'] = current_user.id

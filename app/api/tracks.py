@@ -14,20 +14,22 @@ from app.models.track import Track
 
 class TrackListPost(ResourceList):
     """
-    List and create Tracks
+    轨道列表和创建类
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
+        # 检查用户是否有轨道组织者权限
         if not has_access('is_track_organizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, 'Track-organizer access is required.')
+            raise ForbiddenError({'source': ''}, '需要轨道组织者权限。')
 
     schema = TrackSchema
     data_layer = {'session': db.session, 'model': Track}
@@ -35,16 +37,18 @@ class TrackListPost(ResourceList):
 
 class TrackList(ResourceList):
     """
-    List and create Tracks
+    轨道列表类
     """
 
     def query(self, view_kwargs):
         """
-        query method for resource list
-        :param view_kwargs:
+        资源列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 查询所有轨道
         query_ = self.session.query(Track)
+        # 根据事件查询条件过滤
         query_ = event_query(query_, view_kwargs)
         return query_
 

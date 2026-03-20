@@ -19,26 +19,28 @@ from app.models.user import User
 
 class AccessCodeListPost(ResourceList):
     """
-    Create AccessCodes
+    创建访问码
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationships and permissions
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件、用户）
         require_relationship(['event', 'user'], data)
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, "Minimum Organizer access required")
+            raise ForbiddenError({'source': ''}, "至少需要组织者权限")
 
     def before_create_object(self, data, view_kwargs):
         """
-        before create object method for AccessCodeListPost Class
-        :param data:
-        :param view_kwargs:
+        创建对象前的检查方法，用于AccessCodeListPost类
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         if data.get('tickets', None):

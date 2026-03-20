@@ -17,31 +17,34 @@ from app.models.role_invite import RoleInvite
 from app.models.user import User
 from app.models.users_events_role import UsersEventsRoles
 
+# 角色邀请相关路由蓝图
 role_invites_misc_routes = Blueprint('role_invites_misc', __name__, url_prefix='/v1')
 
 
 class RoleInviteListPost(ResourceList):
     """
-    Create role invites
+    创建角色邀请
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before get method to get the resource id for fetching details
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于获取资源ID以获取详情
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件、角色）
         require_relationship(['event', 'role'], data)
+        # 检查用户是否有组织者权限
         if not has_access('is_organizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, 'Organizer access is required.')
+            raise ForbiddenError({'source': ''}, '需要组织者权限。')
 
     def before_create_object(self, data, view_kwargs):
         """
-        before create object method for RoleInviteListPost Class
-        :param data:
-        :param view_kwargs:
+        创建对象前的检查方法，用于RoleInviteListPost类
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         if 'email' in data and 'event' in data:

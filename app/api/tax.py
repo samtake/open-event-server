@@ -15,21 +15,24 @@ from app.models.tax import Tax
 
 class TaxList(ResourceList):
     """
-    TaxList class for creating a TaxSchema
-    only POST and GET method allowed
+    税务列表类，用于创建TaxSchema
+    只允许POST和GET方法
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, 'Co-organizer access is required.')
+            raise ForbiddenError({'source': ''}, '需要共同组织者权限。')
+        # 检查事件是否启用了税务功能
         if (
             get_count(
                 db.session.query(Event).filter_by(
@@ -39,14 +42,14 @@ class TaxList(ResourceList):
             > 0
         ):
             raise MethodNotAllowed(
-                {'parameter': 'event_id'}, "Tax is disabled for this Event"
+                {'parameter': 'event_id'}, "此事件已禁用税务功能"
             )
 
     def before_create_object(self, data, view_kwargs):
         """
-        method to check if tax object already exists for an event
-        :param data:
-        :param view_kwargs:
+        检查事件是否已存在税务对象的方法
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         if (

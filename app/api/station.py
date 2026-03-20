@@ -13,19 +13,21 @@ from app.models.station import Station
 
 
 class StationList(ResourceList):
-    """Create and List Station"""
+    """创建和列出站点"""
 
     def query(self, view_kwargs):
         """
-        query method for different view_kwargs
-        :param view_kwargs:
+        不同view_kwargs的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 查询所有站点
         query_ = self.session.query(Station)
+        # 如果提供了事件ID，则过滤该事件的站点
         if view_kwargs.get('event_id'):
             event = safe_query_kwargs(Event, view_kwargs, 'event_id')
             query_ = query_.filter_by(event_id=event.id)
-
+        # 如果提供了微位置ID，则过滤该微位置的站点
         elif view_kwargs.get('microlocation_id'):
             event = safe_query_kwargs(Microlocation, view_kwargs, 'microlocation_id')
             query_ = query_.filter_by(microlocation_id=event.id)
@@ -42,12 +44,12 @@ class StationList(ResourceList):
 
 
 class StationDetail(ResourceDetail):
-    """Station detail by id"""
+    """根据ID获取站点详情"""
 
     @staticmethod
     def before_patch(args, kwargs, data):
         """
-        before patch method
+        patch方法前的检查方法
         :param args:
         :param kwargs:
         :param data:

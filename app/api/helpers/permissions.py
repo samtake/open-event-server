@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+权限装饰器模块 - Open Event Server API权限控制装饰器
+
+此模块提供各种权限控制装饰器，用于保护API端点。
+
+作者: FOSSASIA
+"""
+
 from datetime import datetime
 from functools import wraps
 
@@ -12,10 +22,14 @@ from app.models.event import Event
 
 def second_order_decorator(inner_dec):
     """
-    Second order decorator. Decorator to apply on a decorator.
+    二阶装饰器。用于装饰装饰器的装饰器。
     https://stackoverflow.com/questions/5952641/decorating-decorators-try-to-get-my-head-around-understanding-it
-    :param inner_dec:
-    :return:
+    
+    参数:
+        inner_dec: 内部装饰器
+        
+    返回:
+        装饰器函数
     """
 
     def ddmain(outer_dec):
@@ -36,15 +50,19 @@ def second_order_decorator(inner_dec):
 
 def jwt_required(fn, realm=None):
     """
-    Modified from original jwt_required to comply with `flask-rest-jsonapi` decorator conventions
-    View decorator that requires a valid JWT token to be present in the request
-    :param fn: function to be decorated
-    :param realm: an optional realm
+    从原始jwt_required修改而来，以符合`flask-rest-jsonapi`装饰器约定
+    视图装饰器，要求请求中存在有效的JWT令牌
+    
+    参数:
+        fn: 要装饰的函数
+        realm: 可选的领域参数
     """
 
     @wraps(fn)
     def decorator(*args, **kwargs):
+        # 验证JWT令牌
         verify_jwt_in_request()
+        # 更新用户最后访问时间
         current_user.last_accessed_at = datetime.now()
         save_to_db(current_user)
         return fn(*args, **kwargs)
@@ -55,17 +73,21 @@ def jwt_required(fn, realm=None):
 @second_order_decorator(jwt_required)
 def is_super_admin(f):
     """
-    Decorator function for things allowed exclusively to super admin.
-    Do not use this if the resource is also accessible by a normal admin, use the is_admin decorator instead.
-    :param f:
-    :return:
+    仅限超级管理员的装饰器函数。
+    如果资源也可由普通管理员访问，请不要使用此函数，而应使用is_admin装饰器。
+    
+    参数:
+        f: 要装饰的函数
+        
+    返回:
+        装饰后的函数
     """
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = current_user
         if not user.is_super_admin:
-            raise ForbiddenError({'source': ''}, 'Super admin access is required')
+            raise ForbiddenError({'source': ''}, '需要超级管理员权限')
         return f(*args, **kwargs)
 
     return decorated_function
@@ -74,16 +96,20 @@ def is_super_admin(f):
 @second_order_decorator(jwt_required)
 def is_admin(f):
     """
-    Decorator function for things allowed to admins and super admins.
-    :param f:
-    :return:
+    管理员和超级管理员装饰器函数。
+    
+    参数:
+        f: 要装饰的函数
+        
+    返回:
+        装饰后的函数
     """
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = current_user
         if not user.is_admin and not user.is_super_admin:
-            raise ForbiddenError({'source': ''}, 'Admin access is required')
+            raise ForbiddenError({'source': ''}, '需要管理员权限')
         return f(*args, **kwargs)
 
     return decorated_function
@@ -92,10 +118,14 @@ def is_admin(f):
 @second_order_decorator(jwt_required)
 def is_user_itself(f):
     """
-    Allows admin and super admin access to any resource irrespective of id.
-    Otherwise the user can only access his/her resource.
-    :param f:
-    :return:
+    允许管理员和超级管理员访问任何资源，无论ID如何。
+    否则用户只能访问他/她自己的资源。
+    
+    参数:
+        f: 要装饰的函数
+        
+    返回:
+        装饰后的函数
     """
 
     @wraps(f)

@@ -14,19 +14,19 @@ from app.models.event_topic import EventTopic
 
 
 class EventTopicList(ResourceList):
-
     """
-    List and create event topics
+    列出和创建事件主题
     """
 
     def after_create_object(self, event_topic, data, view_kwargs):
         """
-        after create method to save roles for users and add the user as an accepted role(organizer)
-        :param event_topic:
-        :param data:
-        :param view_kwargs:
+        创建后方法，用于保存用户角色并将用户添加为已接受角色（组织者）
+        :param event_topic: 事件主题
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 如果提供了系统图片URL，则创建系统图片
         if data.get('system_image_url'):
             try:
                 uploaded_image = create_system_image(
@@ -34,18 +34,19 @@ class EventTopicList(ResourceList):
                 )
             except (urllib.error.HTTPError, urllib.error.URLError):
                 raise UnprocessableEntityError(
-                    {'source': 'attributes/system-image-url'}, 'Invalid Image URL'
+                    {'source': 'attributes/system-image-url'}, '图片URL无效'
                 )
             except OSError:
                 raise UnprocessableEntityError(
-                    {'source': 'attributes/system-image-url'}, 'Image is absent at URL'
+                    {'source': 'attributes/system-image-url'}, 'URL处图片不存在'
                 )
         else:
+            # 否则创建默认系统图片
             try:
                 uploaded_image = create_system_image(unique_identifier=event_topic.id)
             except OSError:
                 raise UnprocessableEntityError(
-                    {'source': ''}, 'Default Image is absent in server'
+                    {'source': ''}, '服务器上缺少默认图片'
                 )
 
         self.session.query(EventTopic).filter_by(id=event_topic.id).update(uploaded_image)
@@ -103,6 +104,7 @@ class EventTopicDetail(ResourceDetail):
         :param view_kwargs:
         :return:
         """
+        # 如果提供了系统图片URL，则创建系统图片
         if data.get('system_image_url'):
             try:
                 uploaded_image = create_system_image(
@@ -110,18 +112,19 @@ class EventTopicDetail(ResourceDetail):
                 )
             except (urllib.error.HTTPError, urllib.error.URLError):
                 raise UnprocessableEntityError(
-                    {'source': 'attributes/system-image-url'}, 'Invalid Image URL'
+                    {'source': 'attributes/system-image-url'}, '图片URL无效'
                 )
             except OSError:
                 raise UnprocessableEntityError(
-                    {'source': 'attributes/system-image-url'}, 'Image is absent at URL'
+                    {'source': 'attributes/system-image-url'}, 'URL处图片不存在'
                 )
         else:
+            # 否则创建默认系统图片
             try:
                 uploaded_image = create_system_image(unique_identifier=event_topic.id)
             except OSError:
                 raise UnprocessableEntityError(
-                    {'source': ''}, 'Default Image is absent in server'
+                    {'source': ''}, '服务器上缺少默认图片'
                 )
 
             data['system_image_url'] = uploaded_image['system_image_url']

@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+蓝图管理模块 - Open Event Server 路由和后台管理
+
+此模块负责管理Flask蓝图和Flask-Admin后台管理界面。
+
+作者: FOSSASIA
+"""
+
 import flask_login as login
 import requests
 from flask import Blueprint, make_response, redirect, request, url_for
@@ -11,50 +21,90 @@ from app.models.user import User
 
 
 class AdminModelView(ModelView):
+    """
+    管理员模型视图
+    """
+    
     def is_accessible(self):
+        """
+        检查当前用户是否有权限访问
+        
+        返回:
+            bool: 是否有权限访问
+        """
         return login.current_user.is_authenticated
 
     def inaccessible_callback(self, name, **kwargs):
-        # redirect to login page if user doesn't have access
+        """
+        当用户无权限访问时的回调
+        
+        参数:
+            name: 视图名称
+            **kwargs: 其他参数
+            
+        返回:
+            Response: 重定向到登录页面
+        """
+        # 如果用户没有访问权限，重定向到登录页面
         return redirect(url_for('admin.index', next=request.url))
 
 
 class LoginForm(form.Form):
+    """
+    管理员登录表单
+    """
+    
     login = fields.TextField(
         validators=[validators.required(), validators.email()],
         render_kw={"placeholder": "john.doe@example.com"},
     )
     password = fields.PasswordField(
-        validators=[validators.required()], render_kw={"placeholder": "xyzzy"}
+        validators=[validators.required()], render_kw={"placeholder": "密码"}
     )
 
     def validate_login(self, field):
         """
-        validate login
-        :param field:
-        :return:
+        验证登录信息
+        
+        参数:
+            field: 表单字段
+            
+        异常:
+            validators.ValidationError: 当验证失败时抛出
         """
         user = self.get_user()
 
         if user is None:
-            raise validators.ValidationError('User does not exist.')
+            raise validators.ValidationError('用户不存在。')
 
         if not user.is_correct_password(self.password.data):
-            raise validators.ValidationError('Credentials incorrect.')
+            raise validators.ValidationError('凭据不正确。')
 
         if not user.is_admin and not user.is_super_admin:
-            raise validators.ValidationError('Access Forbidden. Admin Rights Required')
+            raise validators.ValidationError('访问被禁止。需要管理员权限')
 
     def get_user(self):
+        """
+        根据邮箱获取用户
+        
+        返回:
+            User: 用户对象，如果不存在则返回None
+        """
         return User.query.filter_by(email=self.login.data).first()
 
 
 class MyAdminIndexView(AdminIndexView):
+    """
+    自定义管理员索引视图
+    """
+    
     @expose('/')
     def index(self):
         """
-        /admin
-        :return:
+        /admin 路由
+        
+        返回:
+            Response: 响应对象
         """
         if not login.current_user.is_authenticated:
             return redirect(url_for('.login_view'))
@@ -63,10 +113,12 @@ class MyAdminIndexView(AdminIndexView):
     @expose('/login/', methods=('GET', 'POST'))
     def login_view(self):
         """
-        login view for flask-admin
-        :return:
+        Flask-Admin登录视图
+        
+        返回:
+            Response: 响应对象
         """
-        # handle user login
+        # 处理用户登录
         form = LoginForm(request.form)
         if admin_helpers.validate_form_on_submit(form):
             user = form.get_user()
@@ -79,19 +131,27 @@ class MyAdminIndexView(AdminIndexView):
 
     @expose('/logout/')
     def logout_view(self):
+        """
+        登出视图
+        
+        返回:
+            Response: 重定向到登录页面
+        """
         login.logout_user()
         return redirect(url_for('.index'))
 
 
+# 主页路由
 home_routes = Blueprint('home', __name__)
 
 
-# Flask views
 @home_routes.route('/')
 def index():
     """
-    Index route
-    :return:
+    首页路由
+    
+    返回:
+        Response: API文档页面
     """
     r = requests.get(
         'https://raw.githubusercontent.com/fossasia/open-event-server/gh-pages/api/v1/index.html'
@@ -102,17 +162,28 @@ def index():
 
 
 class BlueprintsManager:
+    """
+    蓝图管理器
+    """
+    
     def __init__(self):
         pass
 
     @staticmethod
     def register(app):
         """
-        Register blueprints
-        :param app: a flask app instance
-        :return:
+        注册蓝图
+        
+        参数:
+            app: Flask应用实例
+            
+        返回:
+            None
         """
+        # 注册主页路由
         app.register_blueprint(home_routes)
+        
+        # 创建Flask-Admin实例
         admin = Admin(
             app,
             name='Open Event API',
@@ -121,7 +192,7 @@ class BlueprintsManager:
             base_template='admin_base.html',
         )
 
-        # Get all the models in the db, all models should have a explicit __tablename__
+        # 获取数据库中的所有模型，所有模型都应该有明确的__tablename__
         classes, models, table_names = [], [], []
         # noinspection PyProtectedMember
         for class_ in list(db.Model._decl_class_registry.values()):

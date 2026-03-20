@@ -11,26 +11,28 @@ from app.models.user import User
 
 class EmailNotificationListAdmin(ResourceList):
     """
-    List and create email notifications
+    列出和创建邮件通知
     """
 
+    # 允许的方法
     methods = [
         'GET',
     ]
     schema = EmailNotificationSchema
+    # 权限装饰器，只有管理员才能访问
     decorators = (api.has_permission('is_admin'),)
     data_layer = {'session': db.session, 'model': EmailNotification}
 
 
 class EmailNotificationList(ResourceList):
     """
-    List all the email notification
+    列出所有邮件通知
     """
 
     def query(self, view_kwargs):
         """
-        query method for Notifications list
-        :param view_kwargs:
+        通知列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         query_ = self.session.query(EmailNotification)

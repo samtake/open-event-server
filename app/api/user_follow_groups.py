@@ -14,27 +14,30 @@ from app.models.user_follow_group import UserFollowGroup
 
 class UserFollowGroupListPost(ResourceList):
     """
-    Create User Follow Group
+    创建用户关注组
     """
 
     @classmethod
     def before_post(cls, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（组）
         require_relationship(['group'], data)
 
+        # 设置用户ID
         data['user'] = current_user.id
+        # 检查组是否已被关注
         user_follow_group = UserFollowGroup.query.filter_by(
             group_id=data['group'], user=current_user
         ).first()
         if user_follow_group:
             raise ConflictError(
-                {'pointer': '/data/relationships/group'}, "Group already followed"
+                {'pointer': '/data/relationships/group'}, "组已被关注"
             )
 
     view_kwargs = True

@@ -66,23 +66,39 @@ from .errors import NotFoundError
 from .import_helpers import update_import_job
 
 """
-Define all API v2 celery tasks here
-This is done to resolve circular imports
+在此处定义所有API v2的Celery任务
+这样做是为了解决循环导入问题
 """
 
 logger = logging.getLogger(__name__)
 
 
 def make_celery(app=None):
+    """
+    创建Celery实例
+    
+    参数:
+        app: Flask应用实例
+        
+    返回:
+        Celery: Celery实例
+    """
     app = app or create_app()
     ext = FlaskCeleryExt(app)
     return ext.celery
 
 
+# 创建全局Celery实例
 celery = make_celery()
 
 
 def get_smtp_config():
+    """
+    获取SMTP配置
+    
+    返回:
+        dict: SMTP配置字典
+    """
     smtp_encryption = get_settings()['smtp_encryption']
     if smtp_encryption == 'tls':
         smtp_encryption = 'required'

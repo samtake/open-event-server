@@ -14,24 +14,27 @@ from app.models.faq_type import FaqType
 
 class FaqListPost(ResourceList):
     """
-    Create and List FAQs
+    创建和列出常见问题
     """
 
     def before_post(self, args, kwargs, data):
         """
-        method to check for required relationship with event
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于检查与事件的必需关系
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
             raise ObjectNotFound(
-                {'parameter': 'event_id'}, "Event: {} not found".format(data['event'])
+                {'parameter': 'event_id'}, "找不到事件: {}".format(data['event'])
             )
 
     schema = FaqSchema
+    # 允许的方法
     methods = [
         'POST',
     ]
@@ -40,13 +43,13 @@ class FaqListPost(ResourceList):
 
 class FaqList(ResourceList):
     """
-    Show List of FAQs
+    显示常见问题列表
     """
 
     def query(self, view_kwargs):
         """
-        query method for different view_kwargs
-        :param view_kwargs:
+        不同view_kwargs的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         query_ = self.session.query(Faq)

@@ -15,22 +15,25 @@ from app.models.event_topic import EventTopic
 
 class EventSubTopicListPost(ResourceList):
     """
-    Create event sub topics
+    创建事件子主题
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件主题）
         require_relationship(['event_topic'], data)
+        # 检查用户是否有管理员权限
         if not has_access('is_admin'):
-            raise ForbiddenError({'source': ''}, 'Admin access is required.')
+            raise ForbiddenError({'source': ''}, '需要管理员权限。')
 
     view_kwargs = True
+    # 允许的方法
     methods = [
         'POST',
     ]
@@ -40,13 +43,13 @@ class EventSubTopicListPost(ResourceList):
 
 class EventSubTopicList(ResourceList):
     """
-    List event sub topics
+    列出事件子主题
     """
 
     def query(self, view_kwargs):
         """
-        query method for event sub-topics list
-        :param view_kwargs:
+        事件子主题列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
 

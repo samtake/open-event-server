@@ -19,23 +19,27 @@ from app.settings import get_settings
 
 class EventInvoiceList(ResourceList):
     """
-    List and Create Event Invoices
+    列出和创建事件发票
     """
 
     def query(self, view_kwargs):
         """
-        query method for event invoice list
-        :param view_kwargs:
+        事件发票列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
+        # 获取当前用户
         user = current_user
         user_id = view_kwargs.get('user_id')
+        # 检查是否有权限访问
         forbidden = (user_id and user_id != user.id) or not view_kwargs
         if forbidden and not user.is_staff:
-            raise ForbiddenError({'source': ''}, 'Admin access is required')
+            raise ForbiddenError({'source': ''}, '需要管理员权限')
 
+        # 查询事件发票
         query_ = self.session.query(EventInvoice)
         query_ = event_query(query_, view_kwargs, restrict=True)
+        # 如果提供了用户ID，则过滤该用户的发票
         if user_id:
             user = safe_query_kwargs(User, view_kwargs, 'user_id')
             query_ = query_.join(User).filter(User.id == user.id)

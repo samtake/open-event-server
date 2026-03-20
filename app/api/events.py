@@ -75,6 +75,7 @@ from app.models.user_favourite_event import UserFavouriteEvent
 from app.models.users_events_role import UsersEventsRoles
 from app.models.video_stream import VideoStream
 
+# 事件蓝图
 events_blueprint = Blueprint('events_blueprint', __name__, url_prefix='/v1/events')
 
 
@@ -82,17 +83,31 @@ events_blueprint = Blueprint('events_blueprint', __name__, url_prefix='/v1/event
 @jwt_optional
 @to_event_id
 def has_streams(event_id):
+    """
+    检查事件是否有视频流
+    
+    检查指定事件是否有视频流，并检查当前用户是否有访问权限。
+    
+    参数:
+        event_id (int): 事件ID
+        
+    返回:
+        JSON: 包含是否存在视频流和用户是否有访问权限的信息
+    """
     event = Event.query.get_or_404(event_id)
 
     exists = False
+    # 检查事件是否有直接的视频流
     if event.video_stream:
         exists = True
     else:
+        # 检查事件的微位置是否有视频流
         exists = db.session.query(
             VideoStream.query.join(VideoStream.rooms)
             .filter(Microlocation.event_id == event.id)
             .exists()
         ).scalar()
+    # 检查用户是否有访问权限
     can_access = VideoStream(event_id=event.id).user_can_access
     return jsonify(dict(exists=exists, can_access=can_access))
 
@@ -103,6 +118,22 @@ def has_streams(event_id):
 @jwt_required
 @to_event_id
 def get_chat_token(event_id: int):
+    """
+    获取事件的聊天令牌
+    
+    为指定事件生成并返回Rocket.Chat聊天令牌。
+    此函数需要JWT认证才能访问，确保只有已登录用户才能获取聊天令牌。
+    
+    参数:
+        event_id (int): 事件ID
+        
+    返回:
+        JSON: 包含聊天令牌或错误信息的响应
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此端点
+        @to_event_id: 将事件标识符转换为事件ID
+    """
     event = Event.query.get_or_404(event_id)
 
     if not VideoStream(event_id=event.id).user_can_access:
@@ -134,10 +165,21 @@ def get_chat_token(event_id: int):
 @to_event_id
 def get_room_chat_token(event_id: int, microlocation_id: int):
     """
-    Get room chat token for specific room
-    @param event_id: event identifier
-    @param microlocation_id: microlocation id
-    @return: room chat token
+    获取特定房间的聊天令牌
+    
+    为指定事件的特定微位置生成并返回Rocket.Chat聊天令牌。
+    此函数需要JWT认证才能访问，确保只有已登录用户才能获取聊天令牌。
+    
+    参数:
+        event_id (int): 事件ID
+        microlocation_id (int): 微位置ID
+        
+    返回:
+        JSON: 包含聊天令牌或错误信息的响应
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此端点
+        @to_event_id: 将事件标识符转换为事件ID
     """
     event = Event.query.get_or_404(event_id)
     microlocation = Microlocation.query.get_or_404(microlocation_id)
@@ -173,10 +215,21 @@ def get_room_chat_token(event_id: int, microlocation_id: int):
 @to_event_id
 def get_virtual_room_chat_token(event_id: int, video_stream_id: int):
     """
-    Get room chat token for specific room
-    @param event_id: event identifier
-    @param video_stream_id: microlocation id
-    @return: room chat token
+    获取虚拟房间聊天令牌
+    
+    为指定事件的特定视频流生成并返回Rocket.Chat聊天令牌。
+    此函数需要JWT认证才能访问，确保只有已登录用户才能获取聊天令牌。
+    
+    参数:
+        event_id (int): 事件ID
+        video_stream_id (int): 视频流ID
+        
+    返回:
+        JSON: 包含聊天令牌或错误信息的响应
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此端点
+        @to_event_id: 将事件标识符转换为事件ID
     """
     event = Event.query.get_or_404(event_id)
     videoStream = VideoStream.query.get_or_404(video_stream_id)
@@ -206,6 +259,19 @@ def get_virtual_room_chat_token(event_id: int, video_stream_id: int):
 
 
 def validate_event(user, data):
+    """
+    验证事件数据
+    
+    验证用户是否有权限创建或发布事件，以及事件数据是否有效。
+    
+    参数:
+        user: 当前用户对象
+        data (dict): 事件数据
+        
+    异常:
+        ForbiddenError: 当用户没有权限时抛出
+        ConflictError: 当数据冲突时抛出
+    """
     if not user.can_create_event():
         raise ForbiddenError({'source': ''}, "Please verify your Email")
 
@@ -220,6 +286,18 @@ def validate_event(user, data):
 
 
 def validate_date(event, data):
+    """
+    验证事件日期
+    
+    验证事件的日期数据是否有效。
+    
+    参数:
+        event: 事件对象（可选）
+        data (dict): 包含日期数据的字典
+        
+    异常:
+        UnprocessableEntityError: 当日期数据无效时抛出
+    """
     if event:
         if 'starts_at' not in data:
             data['starts_at'] = event.starts_at
@@ -246,6 +324,14 @@ def validate_date(event, data):
 
 
 def get_event_query():
+    """
+    获取事件查询对象
+    
+    根据用户权限返回事件查询对象。如果用户不是管理员，则只返回已发布的事件。
+    
+    返回:
+        Query: 事件查询对象
+    """
     query_ = Event.query
     if get_jwt_identity() is None or not current_user.is_staff:
         # If user is not admin, we only show published events

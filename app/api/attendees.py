@@ -21,6 +21,13 @@ from app.settings import get_settings
 
 
 def get_sold_and_reserved_tickets_count(ticket_id):
+    """
+    获取已售和保留的门票数量
+    
+    :param ticket_id: 门票ID
+    :return: 已售和保留的门票数量
+    """
+    # 获取订单过期时间设置
     order_expiry_time = get_settings()['order_expiry_time']
     return (
         db.session.query(TicketHolder.id)
@@ -32,15 +39,15 @@ def get_sold_and_reserved_tickets_count(ticket_id):
         )
         .filter(
             or_(
-                Order.status == 'placed',
-                Order.status == 'completed',
+                Order.status == 'placed',  # 已下单
+                Order.status == 'completed',  # 已完成
                 and_(
-                    Order.status == 'initializing',
+                    Order.status == 'initializing',  # 初始化中
                     Order.created_at + datetime.timedelta(minutes=order_expiry_time)
                     > datetime.datetime.utcnow(),
                 ),
                 and_(
-                    Order.status == 'pending',
+                    Order.status == 'pending',  # 待处理
                     Order.created_at + datetime.timedelta(minutes=30 + order_expiry_time)
                     > (datetime.datetime.utcnow()),
                 ),

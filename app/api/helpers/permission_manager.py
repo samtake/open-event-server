@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+权限管理模块 - Open Event Server API权限控制
+
+此模块提供各种权限检查函数，用于控制对API端点的访问。
+
+作者: FOSSASIA
+"""
+
 import logging
 from typing import Union
 
@@ -20,47 +30,135 @@ logger = logging.getLogger(__name__)
 
 @jwt_required
 def auth_required(view, view_args, view_kwargs, *args, **kwargs):
+    """
+    基本的认证要求
+    
+    确保用户已登录。此函数需要JWT认证才能访问，确保只有已登录用户才能执行相关操作。
+    
+    参数:
+        view: 视图函数
+        view_args: 视图参数
+        view_kwargs: 视图关键字参数
+        
+    返回:
+        视图函数结果
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此函数
+    """
     return view(*view_args, **view_kwargs)
 
 
 @jwt_required
 def is_super_admin(view, view_args, view_kwargs, *args, **kwargs):
     """
-    Permission function for things allowed exclusively to super admin.
-    Do not use this if the resource is also accessible by a normal admin,
-    use the is_admin decorator instead.
-    :return:
+    仅限超级管理员的权限函数。
+    如果资源也可由普通管理员访问，请不要使用此函数，
+    而应使用is_admin装饰器。
+    
+    此函数需要JWT认证才能访问，确保只有已登录用户才能执行权限检查。
+    
+    参数:
+        view: 视图函数
+        view_args: 视图参数
+        view_kwargs: 视图关键字参数
+        
+    返回:
+        视图函数结果
+        
+    异常:
+        ForbiddenError: 当用户不是超级管理员时抛出
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此函数
     """
     user = current_user
     if not user.is_super_admin:
-        raise ForbiddenError({'source': ''}, 'Super admin access is required')
+        raise ForbiddenError({'source': ''}, '需要超级管理员权限')
     return view(*view_args, **view_kwargs)
 
 
 @jwt_required
 def is_admin(view, view_args, view_kwargs, *args, **kwargs):
+    """
+    管理员权限检查
+    
+    检查用户是否具有管理员权限。此函数需要JWT认证才能访问，确保只有已登录用户才能执行权限检查。
+    
+    参数:
+        view: 视图函数
+        view_args: 视图参数
+        view_kwargs: 视图关键字参数
+        
+    返回:
+        视图函数结果
+        
+    异常:
+        ForbiddenError: 当用户不是管理员时抛出
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此函数
+    """
     user = current_user
     if not user.is_admin and not user.is_super_admin:
-        raise ForbiddenError({'source': ''}, 'Admin access is required')
+        raise ForbiddenError({'source': ''}, '需要管理员权限')
 
     return view(*view_args, **view_kwargs)
 
 
 @jwt_required
 def is_owner(view, view_args, view_kwargs, *args, **kwargs):
+    """
+    事件所有者权限检查
+    
+    检查用户是否为指定事件的所有者。此函数需要JWT认证才能访问，确保只有已登录用户才能执行权限检查。
+    
+    参数:
+        view: 视图函数
+        view_args: 视图参数
+        view_kwargs: 视图关键字参数
+        
+    返回:
+        视图函数结果
+        
+    异常:
+        ForbiddenError: 当用户不是事件所有者时抛出
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此函数
+    """
     user = current_user
 
     if user.is_staff:
         return view(*view_args, **view_kwargs)
 
     if not user.is_owner(kwargs['event_id']):
-        raise ForbiddenError({'source': ''}, 'Owner access is required')
+        raise ForbiddenError({'source': ''}, '需要事件所有者权限')
 
     return view(*view_args, **view_kwargs)
 
 
 @jwt_required
 def is_organizer(view, view_args, view_kwargs, *args, **kwargs):
+    """
+    事件组织者权限检查
+    
+    检查用户是否为指定事件的组织者。此函数需要JWT认证才能访问，确保只有已登录用户才能执行权限检查。
+    
+    参数:
+        view: 视图函数
+        view_args: 视图参数
+        view_kwargs: 视图关键字参数
+        
+    返回:
+        视图函数结果
+        
+    异常:
+        ForbiddenError: 当用户不是事件组织者时抛出
+        
+    装饰器说明:
+        @jwt_required: 要求用户必须提供有效的JWT令牌才能访问此函数
+    """
     user = current_user
 
     if user.is_staff:
@@ -70,11 +168,25 @@ def is_organizer(view, view_args, view_kwargs, *args, **kwargs):
     if event_id and (user.is_owner(event_id) or user.is_organizer(event_id)):
         return view(*view_args, **view_kwargs)
 
-    raise ForbiddenError({'source': ''}, 'Organizer access is required')
+    raise ForbiddenError({'source': ''}, '需要事件组织者权限')
 
 
 @jwt_required
 def is_coorganizer(view, view_args, view_kwargs, *args, **kwargs):
+    """
+    事件共同组织者权限检查
+    
+    参数:
+        view: 视图函数
+        view_args: 视图参数
+        view_kwargs: 视图关键字参数
+        
+    返回:
+        视图函数结果
+        
+    异常:
+        ForbiddenError: 当用户没有事件访问权限时抛出
+    """
     user = current_user
 
     if user.is_staff:
@@ -83,7 +195,7 @@ def is_coorganizer(view, view_args, view_kwargs, *args, **kwargs):
     if user.has_event_access(kwargs['event_id']):
         return view(*view_args, **view_kwargs)
 
-    raise ForbiddenError({'source': ''}, 'Co-organizer access is required.')
+    raise ForbiddenError({'source': ''}, '需要事件共同组织者权限。')
 
 
 @jwt_required

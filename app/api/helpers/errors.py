@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+错误处理模块 - Open Event Server API错误响应
+
+此模块定义了符合JSON:API规范的错误响应类。
+
+作者: FOSSASIA
+"""
+
 import json
 from typing import Union
 
@@ -8,29 +18,36 @@ from flask_rest_jsonapi.errors import jsonapi_errors
 
 class ErrorResponse(JsonApiException):
     """
-    Parent ErrorResponse class for handling json-api compliant errors.
-    Inspired by the JsonApiException class of `flask-rest-jsonapi` itself
+    错误响应父类，用于处理符合json-api规范的错误。
+    受`flask-rest-jsonapi`本身的JsonApiException类启发
     """
 
     headers = {'Content-Type': 'application/vnd.api+json'}
 
     def __init__(self, source: Union[dict, str], detail=None, title=None, status=None):
-        """Initialize a jsonapi ErrorResponse Object
+        """
+        初始化jsonapi错误响应对象
 
-        :param dict source: the source of the error
-        :param str detail: the detail of the error
+        参数:
+            source: 错误来源
+            detail: 错误详情
+            title: 错误标题
+            status: HTTP状态码
         """
 
         if isinstance(source, str) and detail is None:
-            # We have been passed a single argument, and hence source is unknown
-            # so we'll represent source as detail
+            # 我们被传递了一个参数，因此source未知
+            # 所以我们将source表示为detail
             super().__init__(None, source)
         else:
             super().__init__(source, detail, title, status)
 
     def respond(self):
         """
-        :return: a jsonapi compliant response object
+        返回符合jsonapi规范的响应对象
+        
+        返回:
+            Response: Flask响应对象
         """
         dict_ = self.to_dict()
         return make_response(
@@ -40,58 +57,61 @@ class ErrorResponse(JsonApiException):
 
 class ForbiddenError(ErrorResponse):
     """
-    Default class for 403 Error
+    403错误的默认类
     """
 
-    title = 'Access Forbidden'
+    title = '访问被禁止'
     status = 403
 
 
 class NotFoundError(ErrorResponse):
     """
-    Default class for 404 Error
+    404错误的默认类
     """
 
-    title = 'Not Found'
+    title = '未找到'
     status = 404
 
 
 class ServerError(ErrorResponse):
+    """
+    500错误的默认类
+    """
     status = 500
-    title = 'Internal Server Error'
+    title = '内部服务器错误'
 
 
 class UnprocessableEntityError(ErrorResponse):
     """
-    Default class for 422 Error
+    422错误的默认类
     """
 
     status = 422
-    title = 'Unprocessable Entity'
+    title = '无法处理的实体'
 
 
 class BadRequestError(ErrorResponse):
     """
-    Default class for 400 Error
+    400错误的默认类
     """
 
     status = 400
-    title = 'Bad Request'
+    title = '错误请求'
 
 
 class ConflictError(ErrorResponse):
     """
-    Default class for 409 Error
+    409错误的默认类
     """
 
-    title = "Conflict"
+    title = "冲突"
     status = 409
 
 
 class MethodNotAllowed(ErrorResponse):
     """
-    Default Class to throw HTTP 405 Exception
+    抛出HTTP 405异常的默认类
     """
 
-    title = "Method Not Allowed"
+    title = "方法不被允许"
     status = 405

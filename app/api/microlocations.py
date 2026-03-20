@@ -14,21 +14,24 @@ from app.models.session import Session
 
 class MicrolocationListPost(ResourceList):
     """
-    List and create microlocations
+    微位置列表和创建类
     """
 
     def before_post(self, args, kwargs, data):
         """
-        before post method to check for required relationship and proper permission
-        :param args:
-        :param kwargs:
-        :param data:
+        post方法前的检查方法，用于验证必需的关系和适当权限
+        :param args: 参数
+        :param kwargs: 关键字参数
+        :param data: 数据
         :return:
         """
+        # 检查是否提供了必需的关系（事件）
         require_relationship(['event'], data)
+        # 检查用户是否有共同组织者权限
         if not has_access('is_coorganizer', event_id=data['event']):
-            raise ForbiddenError({'source': ''}, 'Co-organizer access is required.')
+            raise ForbiddenError({'source': ''}, '需要共同组织者权限。')
 
+    # 允许的方法
     methods = [
         'POST',
     ]
@@ -38,13 +41,13 @@ class MicrolocationListPost(ResourceList):
 
 class MicrolocationList(ResourceList):
     """
-    List Microlocations
+    微位置列表类
     """
 
     def query(self, view_kwargs):
         """
-        query method for resource list
-        :param view_kwargs:
+        资源列表的查询方法
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         query_ = self.session.query(Microlocation)

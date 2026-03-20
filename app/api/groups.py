@@ -21,10 +21,13 @@ from app.models.users_groups_role import UsersGroupsRoles
 
 def is_owner_or_organizer(group, user):
     """
-    Checks if the user is admin, owner or organizer of group
+    检查用户是否是组的管理员、所有者或组织者
     """
+    # 检查用户是否是管理员
     is_admin = user.is_staff
+    # 检查用户是否是组的所有者
     is_owner = group.user == user
+    # 检查用户是否是组织者
     is_organizer = False
     organizer_role = Role.query.filter_by(name='organizer').first()
     if organizer_role:
@@ -38,14 +41,14 @@ def is_owner_or_organizer(group, user):
 
 class GroupListPost(ResourceList):
     """
-    Create and List Groups
+    创建和列出组
     """
 
     def before_create_object(self, data, view_kwargs):
         """
-        before create object method for GroupListPost Class
-        :param data:
-        :param view_kwargs:
+        创建对象前的检查方法，用于GroupListPost类
+        :param data: 数据
+        :param view_kwargs: 视图关键字参数
         :return:
         """
         data['user_id'] = current_user.id

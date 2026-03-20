@@ -30,15 +30,18 @@ from app.models.video_recording import VideoRecording
 from app.models.video_stream import VideoStream
 from app.models.video_stream_moderator import VideoStreamModerator
 
+# 日志记录器
 logger = logging.getLogger(__name__)
 
+# 视频流相关路由蓝图
 streams_routes = Blueprint('streams', __name__, url_prefix='/v1/video-streams')
 
+# 默认选项
 default_options = {
-    'record': True,
-    'autoStartRecording': False,
-    'muteOnStart': True,
-    'endCurrentMeeting': False,
+    'record': True,                 # 是否录制
+    'autoStartRecording': False,    # 是否自动开始录制
+    'muteOnStart': True,           # 开始时是否静音
+    'endCurrentMeeting': False,     # 是否结束当前会议
 }
 
 
