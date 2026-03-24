@@ -1,16 +1,5 @@
 # Open Event Server（中文版）
 
-![Open Event Server](/docs/images/open-event-server.png)
-
-[![GitHub release](https://img.shields.io/github/release/fossasia/open-event-server.svg)](https://github.com/fossasia/open-event-server/releases/latest)
-[![Build Status](https://travis-ci.org/fossasia/open-event-server.svg?branch=development)](https://travis-ci.org/fossasia/open-event-server)
-[![CircleCI Build Staus Badge](https://img.shields.io/circleci/build/github/fossasia/open-event-server?label=CircleCI%20Build)](https://www.circleci.com/gh/fossasia/open-event-server)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/f5036c0e23b44270ad24397e338b8412)](https://www.codacy.com/gh/fossasia/open-event-server/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fossasia/open-event-server&amp;utm_campaign=Badge_Grade)
-[![Codecov branch](https://codecov.io/gh/fossasia/open-event-server/branch/development/graph/badge.svg?style=flat-square)](https://codecov.io/gh/fossasia/open-event-server)
-[![Gitter](https://img.shields.io/badge/chat-on%20gitter-ff006f.svg?style=flat-square)](https://gitter.im/fossasia/open-event-server)
-[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
-[![Mailing List](https://img.shields.io/badge/Mailing%20List-FOSSASIA-blue.svg)](https://groups.google.com/forum/#!forum/open-event)
-[![Twitter Follow](https://img.shields.io/twitter/follow/eventyay.svg?style=social&label=Follow&maxAge=2592000?style=flat-square)](https://twitter.com/eventyay)
 
 > **Open Event Server 使组织者能够管理从音乐会到会议和聚会的各种活动。**
 
@@ -297,54 +286,3 @@ pre-commit installed at .git/hooks/pre-commit
 ## 日志记录
 
 某些信息会被记录并存储在数据库中，以供将来参考、解决冲突或维护系统概况。阅读有关[日志记录的更多内容](/docs/general/logs.md)。
-
-## 国际化 (i18n)
-
-[![Translation status](https://hosted.weblate.org/widgets/open-event/-/multi-blue.svg)](https://hosted.weblate.org/engage/open-event)
-
-Open Event 使用 Weblate（一种旨在简化开发人员和翻译人员翻译工作的网络工具）进行翻译。
-
-如果你希望为 Open Event 贡献翻译，请[在该服务器注册](https://hosted.weblate.org/accounts/register/)。
-
-激活帐户后，请前往[翻译部分](https://hosted.weblate.org/projects/open-event/)。
-
-## 贡献、错误报告、功能请求
-
-这是一个开源项目，我们欢迎贡献者报告错误并提交功能请求，也欢迎提交 pull request。请在此处报告问题：https://github.com/fossasia/open-event-server/issues。建议你先阅读[开发者手册](https://github.com/fossasia/open-event/tree/master/docs/dev-handbook)，以便对生态系统有基本了解。
-
-## 分支策略
-
-我们有以下分支：
- * **development**
-	 所有开发工作都在此分支进行。如果你要贡献代码，请将 pull request 提交到 _development_。
-	 所有 PR 必须通过 Travis 的构建检查和单元测试检查（https://open-event-api-dev.herokuapp.com - 运行在 development 分支）。
-
- * **master**
-   此分支包含已发布的代码。在 development 分支积累了重要功能/错误修复后，我们会进行版本更新并发布。（https://api.eventyay.com - 运行在 `master` 分支。托管在 Google Cloud Platform (Google Container Engine + Kubernetes)）。
- * **gh-pages**
-   此分支包含文档网站 http://dev.eventyay.com。每次 development 分支提交时，都会通过脚本和 Travis 自动构建该站点。它包含 Readme 和 /docs 文件夹的 md 文件，还包括 javadocs。
-
-## 发布策略
-
-当前的临时发布策略（由于活动频繁且存在许多错误）是每周一和周五发布 alpha 版本（因为我们发现周末活动更多）。因此，在 master 分支发布新版本之前，任何错误修复都不会反映在 eventyay.com 上。
-
-## 贡献最佳实践
-
-**提交**
-* 编写清晰、有意义的 git 提交信息（请阅读 http://chris.beams.io/posts/git-commit/）
-* 确保你的 PR 描述包含 GitHub 的特殊关键字引用，当 PR 合并时会自动关闭相关 issue。（更多信息见 https://github.com/blog/1506-closing-issues-via-pull-requests ）
-* 当你对 PR 做了非常小的更改（例如修复失败的 travis 构建、一些样式更正或审查者要求的小更改）时，请务必将提交压缩（squash）为一个提交，这样不会为很小的修复生成大量提交。（了解如何 squash： https://davidwalsh.name/squash-commits-git ）
-
-**功能请求和错误报告**
-* 在你向[问题跟踪器](https://github.com/fossasia/open-event-server/issues)提交功能请求或错误报告时，请务必添加重现步骤。尤其是当该错误比较奇怪/罕见时。
-
-**加入开发**
-* 在开始开发之前，请在本地设置系统并完整浏览应用程序。点击你能找到的任何链接/按钮，看看它会指向哪里。探索。 （不用担心...不会对应用程序或你造成影响：wink: 你唯一会得到的是对各个部分更熟悉，并可能找到改进的好主意。）
-* 在你的机器上测试该应用并探索管理区域。Heroku 上的测试部署不会让你访问管理部分，在那里你可以开启/关闭模块，例如票务，并为服务添加密钥，例如 S3 上的存储。
-* 如果你想处理某个 issue，请在该 issue 下留言。如果它已经分配给了某人，但没有迹象表明有人在做，你可以随时留言，以便如果之前的受让人完全放弃该 issue，可以将它分配给你。
-
-## 许可证
-
-本项目目前根据 **[GNU 通用公共许可证 v3](LICENSE)** 许可。
-
-> 若要以不同许可证获取软件，请联系 [FOSSASIA](http://blog.fossasia.org/contact/)。
