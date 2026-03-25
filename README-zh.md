@@ -1,5 +1,3 @@
-# Open Event Server（中文版）
-
 
 > **Open Event Server 使组织者能够管理从音乐会到会议和聚会的各种活动。**
 
@@ -11,129 +9,6 @@
 - 每个项目安装都附带 **API 文档**（例如测试安装：[https://open-event-api.herokuapp.com](https://open-event-api.herokuapp.com)）。
 - **API 文档** 的托管版本位于仓库的 `gh-pages` 分支，地址为 [http://dev.eventyay.com/api/v1](http://dev.eventyay.com/api/v1)
 
-## 交流方式
-
-* 请加入我们的 **[邮件列表](https://groups.google.com/forum/#!forum/open-event)** 讨论有关项目的问题。
-> https://groups.google.com/forum/#!forum/open-event
-
-* 我们在 **[Gitter](https://gitter.im/fossasia/open-event-server)** 上有聊天频道。
-> [gitter.im/fossasia/open-event-server](https://gitter.im/fossasia/open-event-server)
-
-## 演示版本
-
-演示版本会自动从我们的仓库部署：
-* 从 `master` 分支部署 - **[open-event-api.herokuapp.com](https://open-event-api.herokuapp.com/)**
-* 从 `development` 分支部署 - **[open-event-api-dev.herokuapp.com](https://open-event-api-dev.herokuapp.com/)**
-
-## 安装
-
-Open Event Server 可以部署在多种平台上。下面提供了详细的特定平台安装说明。
-
-1. [安装说明](/docs/installation/basic.md)
-1. [Vagrant 安装](/docs/installation/vagrant.md)
-1. [在 Google Compute Engine 上部署](/docs/installation/google.md)
-1. [在 Google Container Engine (Kubernetes) 上部署](/docs/installation/gce-kubernetes.md)
-1. [在 AWS EC2 上部署](/docs/installation/aws.md)
-1. [在 Digital Ocean 上部署](/docs/installation/digital-ocean.md)
-1. [使用 Docker 部署](/docs/installation/docker.md)
-1. [在 Heroku 上部署](/docs/installation/heroku.md)
-
-也提供一键 Heroku 部署：
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-## 技术栈
-
-请熟悉项目的组成部分以便于贡献。
-
-### 组件
-
-* 数据库 - [PostgreSQL](https://www.postgresql.org)
-* Web 框架 - [Flask](http://flask.pocoo.org)
-* 应用服务器 - [uWSGI](https://github.com/unbit/uwsgi)
-* Web 服务器 - [NGINX](https://www.nginx.com)
-
-注意：open-event-server **目前支持 Python 3.8**。
-
-### 外部服务依赖
-
-#### OAuth 社交认证
-
-OAuth 用于从 Facebook 和 Google 帐号获取信息，使用户能够使用各自的凭据登录：
- 1. Google - https://accounts.google.com/o/oauth2/auth
- 2. Facebook - https://graph.facebook.com/oauth
-
-#### Twitter
-
-公共活动页面提供 Twitter feed 集成。
-
-所需密钥可从 [https://dev.twitter.com/overview/documentation](https://dev.twitter.com/overview/documentation) 获取。
-
-#### Instagram
-
-可以扩展功能，并在活动服务中提供来自 Instagram 的图片。
-
-所需密钥可从 [https://www.instagram.com/developer/authentication/](https://www.instagram.com/developer/authentication/) 获取。
-
-#### Google 地图
-
-Google 地图用于获取有关位置的信息（例如国家、城市、经纬度）。
-
-所需密钥可从 [https://developers.google.com/maps/documentation/javascript/get-api-key](https://developers.google.com/maps/documentation/javascript/get-api-key) 获取。
-
-#### 媒体存储 - 本地/Amazon S3/Google Cloud
-
-媒体（例如音频、头像和徽标）可以存储在本地、Amazon S3 或 Google Storage 中。
-
-1. [Amazon S3 设置说明](/docs/general/amazon-s3.md)
-1. [Google Cloud 设置说明](https://cloud.google.com/storage/docs/migrating#defaultproj)
-
-#### 电子邮件 - SMTP/Sendgrid
-
-服务器可以通过 SMTP 或使用 Sendgrid API 发送电子邮件。
-
-1. SMTP 可以在 `admin/settings` 中直接配置
-2. 获取 [Sendgrid API 令牌](https://sendgrid.com/docs/User_Guide/Settings/api_keys.html)。
-
-#### Heroku API
-
-如果应用部署在 Heroku 上，我们使用 Heroku API 来获取最新版本并显示 Heroku 信息。
-
-所需令牌可从 [https://devcenter.heroku.com/articles/authentication](https://devcenter.heroku.com/articles/authentication) 获取。
-
-#### 支付网关
-
-对于票务销售，该服务集成支付网关：
- 1. Stripe - [获取密钥](https://support.stripe.com/questions/where-do-i-find-my-api-keys)
- 2. Paypal - [获取凭据](https://developer.paypal.com/docs/classic/lifecycle/ug_sandbox/)
-
-## 数据访问
-
-#### 导入与导出
-
-**导入：**
-
-Open Event Server 支持多种格式作为有效的导入来源。
-
-- 一个包含符合 API 结构的 JSON 和二进制媒体文件的 **zip 压缩包**。详情请参阅 [这里](/docs/general/import-export.md)。
-- **Pentabarf XML** 格式也被支持作为有效的导入来源。（[示例文件](https://archive.fosdem.org/2016/schedule/xml)）。
-
-**导出：**
-
-活动数据和会话可以以多种格式导出。
-- 一个包含符合 API 结构的 JSON 和二进制媒体文件的 **zip 压缩包**。详情请参阅 [这里](/docs/general/import-export.md)。
-- **Pentabarf XML** 格式。（[示例文件](https://archive.fosdem.org/2016/schedule/xml)）。
-- **iCal** 格式。（[示例文件](https://archive.fosdem.org/2016/schedule/ical)）。
-- **xCal** 格式。（[示例文件](https://archive.fosdem.org/2016/schedule/xcal)）。
-
-## 角色
-
-系统有两类角色类型。
-
-1. 系统角色与 Open Event 组织和应用程序的运营者相关。
-2. 事件角色与系统的用户及其不同权限相关。
-
-在此处了解更多 [here](/docs/general/roles.md)。
 
 ## 开发
 
@@ -145,18 +20,25 @@ Open Event Server 支持多种格式作为有效的导入来源。
 
 对于 Mac 用户，请参考 [这里](https://opensource.com/article/19/5/python-3-default-mac) 了解更多信息。
 ```bash
-$ brew install pyenv
+$ brew install pyenv #安裝pyenv
 $ pyenv init # 按照指示将运行命令添加到你的环境中
 ```
 编辑环境文件后，重新加载 shell 并导航到此仓库，然后安装 `3.8.17` 以便在本地使用：
 ```bash
-$ pyenv install 3.8.17
+$ pyenv install 3.8.17 #安裝python版本
+$ pyenv global 3.8.17  #設置全局默认版本
+$ pyenv version #查看版本
+
+
 $ cd ...your../open-event-server/
 $ pyenv local 3.8.17
 ```
 现在在 open-event-server 中使用时，Python 版本应会自动切换。
 
 我们还希望 [poetry](https://python-poetry.org/) 可用。
+```bash
+brew install poetry
+```
 
 #### 依赖包设置
 
@@ -282,6 +164,118 @@ pre-commit installed at .git/hooks/pre-commit
 * 现在 pre-commit 将在 git commit 时自动运行！
 
 #### 有关配置，请 [点击这里](https://pre-commit.com/)
+
+
+
+## 安装
+
+Open Event Server 可以部署在多种平台上。下面提供了详细的特定平台安装说明。
+
+1. [安装说明](/docs/installation/basic.md)
+1. [Vagrant 安装](/docs/installation/vagrant.md)
+1. [在 Google Compute Engine 上部署](/docs/installation/google.md)
+1. [在 Google Container Engine (Kubernetes) 上部署](/docs/installation/gce-kubernetes.md)
+1. [在 AWS EC2 上部署](/docs/installation/aws.md)
+1. [在 Digital Ocean 上部署](/docs/installation/digital-ocean.md)
+1. [使用 Docker 部署](/docs/installation/docker.md)
+1. [在 Heroku 上部署](/docs/installation/heroku.md)
+
+也提供一键 Heroku 部署：
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+## 技术栈
+
+请熟悉项目的组成部分以便于贡献。
+
+### 组件
+
+* 数据库 - [PostgreSQL](https://www.postgresql.org)
+* Web 框架 - [Flask](http://flask.pocoo.org)
+* 应用服务器 - [uWSGI](https://github.com/unbit/uwsgi)
+* Web 服务器 - [NGINX](https://www.nginx.com)
+
+注意：open-event-server **目前支持 Python 3.8**。
+
+### 外部服务依赖
+
+#### OAuth 社交认证
+
+OAuth 用于从 Facebook 和 Google 帐号获取信息，使用户能够使用各自的凭据登录：
+ 1. Google - https://accounts.google.com/o/oauth2/auth
+ 2. Facebook - https://graph.facebook.com/oauth
+
+#### Twitter
+
+公共活动页面提供 Twitter feed 集成。
+
+所需密钥可从 [https://dev.twitter.com/overview/documentation](https://dev.twitter.com/overview/documentation) 获取。
+
+#### Instagram
+
+可以扩展功能，并在活动服务中提供来自 Instagram 的图片。
+
+所需密钥可从 [https://www.instagram.com/developer/authentication/](https://www.instagram.com/developer/authentication/) 获取。
+
+#### Google 地图
+
+Google 地图用于获取有关位置的信息（例如国家、城市、经纬度）。
+
+所需密钥可从 [https://developers.google.com/maps/documentation/javascript/get-api-key](https://developers.google.com/maps/documentation/javascript/get-api-key) 获取。
+
+#### 媒体存储 - 本地/Amazon S3/Google Cloud
+
+媒体（例如音频、头像和徽标）可以存储在本地、Amazon S3 或 Google Storage 中。
+
+1. [Amazon S3 设置说明](/docs/general/amazon-s3.md)
+1. [Google Cloud 设置说明](https://cloud.google.com/storage/docs/migrating#defaultproj)
+
+#### 电子邮件 - SMTP/Sendgrid
+
+服务器可以通过 SMTP 或使用 Sendgrid API 发送电子邮件。
+
+1. SMTP 可以在 `admin/settings` 中直接配置
+2. 获取 [Sendgrid API 令牌](https://sendgrid.com/docs/User_Guide/Settings/api_keys.html)。
+
+#### Heroku API
+
+如果应用部署在 Heroku 上，我们使用 Heroku API 来获取最新版本并显示 Heroku 信息。
+
+所需令牌可从 [https://devcenter.heroku.com/articles/authentication](https://devcenter.heroku.com/articles/authentication) 获取。
+
+#### 支付网关
+
+对于票务销售，该服务集成支付网关：
+ 1. Stripe - [获取密钥](https://support.stripe.com/questions/where-do-i-find-my-api-keys)
+ 2. Paypal - [获取凭据](https://developer.paypal.com/docs/classic/lifecycle/ug_sandbox/)
+
+## 数据访问
+
+#### 导入与导出
+
+**导入：**
+
+Open Event Server 支持多种格式作为有效的导入来源。
+
+- 一个包含符合 API 结构的 JSON 和二进制媒体文件的 **zip 压缩包**。详情请参阅 [这里](/docs/general/import-export.md)。
+- **Pentabarf XML** 格式也被支持作为有效的导入来源。（[示例文件](https://archive.fosdem.org/2016/schedule/xml)）。
+
+**导出：**
+
+活动数据和会话可以以多种格式导出。
+- 一个包含符合 API 结构的 JSON 和二进制媒体文件的 **zip 压缩包**。详情请参阅 [这里](/docs/general/import-export.md)。
+- **Pentabarf XML** 格式。（[示例文件](https://archive.fosdem.org/2016/schedule/xml)）。
+- **iCal** 格式。（[示例文件](https://archive.fosdem.org/2016/schedule/ical)）。
+- **xCal** 格式。（[示例文件](https://archive.fosdem.org/2016/schedule/xcal)）。
+
+## 角色
+
+系统有两类角色类型。
+
+1. 系统角色与 Open Event 组织和应用程序的运营者相关。
+2. 事件角色与系统的用户及其不同权限相关。
+
+在此处了解更多 [here](/docs/general/roles.md)。
 
 ## 日志记录
 
