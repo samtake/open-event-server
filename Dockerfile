@@ -1,4 +1,4 @@
-FROM python:3.8.17-alpine as base
+FROM python:3.14-alpine as base
 
 ####
 

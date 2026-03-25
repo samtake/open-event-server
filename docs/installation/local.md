@@ -2,7 +2,7 @@
 
 ## Dependencies required to run Orga Server
 
--   Python 3.8
+-   Python 3.9+
 -   Postgres
 -   OpenSSL
 
@@ -60,7 +60,7 @@ The dependencies are listed in *deb-packages.txt* file. You can install them all
 xargs -a deb-packages.txt sudo apt install
 ```
 
-In case you use Ubuntu 20.04+, where Python 3.8 is not provided in official repo, you can use [pyenv](https://github.com/pyenv/pyenv) to install Python 3.8 (Open Event Server is not compatible with Python 3.9+ yet).
+In case you use Ubuntu 20.04+, where Python 3.9+ is not provided in official repo, you can use [pyenv](https://github.com/pyenv/pyenv) to install Python 3.9+.
 
 ## Install Poetry and Python packages
 

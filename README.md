@@ -67,7 +67,7 @@ Please get familiar with the components of the project in order to be able to co
 * App server - [uWSGI](https://github.com/unbit/uwsgi)
 * Web Server - [NGINX](https://www.nginx.com)
 
-Note that open-event-server **works with Python 3.8** at the moment.
+Note that open-event-server **works with Python 3.9+** at the moment.
 
 ### External Service Dependencies
 
@@ -156,7 +156,7 @@ Read more [here](/docs/general/roles.md).
 
 #### Python and Poetry installatioon
 
-We use Python 3.8. If your operating system does not provide Python 3.8 out of the
+We use Python 3.9+. If your operating system does not provide Python 3.9+ out of the
 box, it is best installed using [`pyenv`](https://github.com/pyenv/pyenv/).
 
 For Mac users, see [here](https://opensource.com/article/19/5/python-3-default-mac) for more info.
@@ -164,11 +164,11 @@ For Mac users, see [here](https://opensource.com/article/19/5/python-3-default-m
 $ brew install pyenv
 $ pyenv init # follow instructions to add run commands to your environment
 ```
-After editing your environment file, reload your shell and navigate to this repo, then install `3.8.17` to be used locally:
+After editing your environment file, reload your shell and navigate to this repo, then install `3.14` to be used locally:
 ```bash
-$ pyenv install 3.8.17
+$ pyenv install 3.14
 $ cd ...your../open-event-server/
-$ pyenv local 3.8.17
+$ pyenv local 3.14
 ```
 Now the Python version should automatically change when used within open-event-server.
 
@@ -179,9 +179,9 @@ We also expect [poetry](https://python-poetry.org/) being available.
 
 Change into the `open-event-server` directory, and execute the following commands:
 
-Activate Python 3.8.17 locally
+Activate Python 3.14 locally
 ```bash
-$ pyenv local 3.8.17
+$ pyenv local 3.14
 ```
 
 Install dependencies using poetry

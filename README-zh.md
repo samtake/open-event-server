@@ -16,22 +16,27 @@
 
 #### Python 和 Poetry 安装
 
-我们使用 Python 3.8。如果你的操作系统默认不提供 Python 3.8，最好使用 [`pyenv`](https://github.com/pyenv/pyenv/) 安装。
+我们使用 Python 3.9+。如果你的操作系统默认不提供 Python 3.9+，最好使用 [`pyenv`](https://github.com/pyenv/pyenv/) 安装。
 
 对于 Mac 用户，请参考 [这里](https://opensource.com/article/19/5/python-3-default-mac) 了解更多信息。
 ```bash
-$ brew install pyenv #安裝pyenv
-$ pyenv init # 按照指示将运行命令添加到你的环境中
+#安裝pyenv
+brew install pyenv
+# 按照指示将运行命令添加到你的环境中
+pyenv init 
 ```
-编辑环境文件后，重新加载 shell 并导航到此仓库，然后安装 `3.8.17` 以便在本地使用：
+编辑环境文件后，重新加载 shell 并导航到此仓库，然后安装 `3.14` 以便在本地使用：
 ```bash
-$ pyenv install 3.8.17 #安裝python版本
-$ pyenv global 3.8.17  #設置全局默认版本
-$ pyenv version #查看版本
+#安裝python版本
+pyenv install 3.14 
+#設置全局默认版本
+pyenv global 3.14
+#查看版本  
+pyenv version 
 
 
-$ cd ...your../open-event-server/
-$ pyenv local 3.8.17
+cd ...your../open-event-server/
+pyenv local 3.14
 ```
 现在在 open-event-server 中使用时，Python 版本应会自动切换。
 
@@ -44,19 +49,19 @@ brew install poetry
 
 切换到 `open-event-server` 目录并执行以下命令：
 
-激活本地 Python 3.8.17
+激活本地 Python 3.14
 ```bash
-$ pyenv local 3.8.17
+pyenv local 3.14
 ```
 
 使用 poetry 安装依赖
 ```bash
-$ poetry install --with dev
+poetry install --with dev
 ```
 
 激活 pre-commit 钩子
 ```bash
-$ poetry run pre-commit install
+poetry run pre-commit install
 ```
 
 这样每次 git 提交都会在提交之前由各种工具检查/格式化。
@@ -195,7 +200,7 @@ Open Event Server 可以部署在多种平台上。下面提供了详细的特�
 * 应用服务器 - [uWSGI](https://github.com/unbit/uwsgi)
 * Web 服务器 - [NGINX](https://www.nginx.com)
 
-注意：open-event-server **目前支持 Python 3.8**。
+注意：open-event-server **目前支持 Python 3.9+**。
 
 ### 外部服务依赖
 

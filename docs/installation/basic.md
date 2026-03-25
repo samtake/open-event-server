@@ -3,7 +3,7 @@
 ## Dependencies required to run Orga Server
 
 
-* Python 3.8
+* Python 3.9+
 * Postgres
 * OpenSSL
 
